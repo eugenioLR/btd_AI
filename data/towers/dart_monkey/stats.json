@@ -1,0 +1,8 @@
+{
+    "cost": 250,
+    "sell_value": 200,
+    "cooldown": 0.732,
+    "range": 100,
+    "penetration": 1,
+    "size": 30
+}

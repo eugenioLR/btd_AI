@@ -1,0 +1,2 @@
+#define btd_ai_VERSION_MAJOR @btd_ai_VERSION_MAJOR@
+#define btd_ai_VERSION_MAJOR @btd_ai_VERSION_MINOR@
