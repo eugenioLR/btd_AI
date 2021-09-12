@@ -51,15 +51,12 @@ void MapLayout::draw(SpriteRenderer* renderer)
 
 void MapLayout::reset_placing_map()
 {
-    png::image<png::rgb_pixel> image(this->placing_path);
-    for (png::uint_32 y = 0; y < image.get_height() && y < HEIGHT; ++y)
+    png::image<png::rgb_pixel> image(placing_path);
+    for (png::uint_32 y = 0; y < image.get_height(); ++y)
     {
-        for (png::uint_32 x = 0; x < image.get_width() && x < WIDTH; ++x)
+        for (png::uint_32 x = 0; x < image.get_width(); ++x)
         {
-            char color_sum = image[y][x].red;
-            color_sum += image[y][x].green;
-            color_sum += image[y][x].blue;
-            placing_map[y * WIDTH + x] = !!color_sum;
+            placing_map[y * image.get_width()  + x] = !!(image[y][x].red + image[y][x].blue + image[y][x].green);
         }
     }
 }

@@ -61,6 +61,11 @@ double Bloon::get_progress()
     return this->progress;
 }
 
+int Bloon::get_layers()
+{
+    return this->layers;
+}
+
 void Bloon::pop()
 {
     this->layers--;

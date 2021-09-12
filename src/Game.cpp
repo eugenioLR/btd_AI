@@ -10,8 +10,8 @@ Game::Game(int width, int height)
 {
     this->width = width;
     this->height = height;
-    this->money = 650;
-    //this->money = 500000;
+    //this->money = 650;
+    this->money = 500000;
     this->health = 40;
     this->round = 1;
     this->state = IDLE;
@@ -207,12 +207,8 @@ void Game::drawGUI()
 
     std::string text = "money: " + std::to_string(money);
     ImGui::Text(text.c_str());
-
-    //DEBUG
-    ImGui::SliderInt("brate", &bloon_rate, 1, 60);
-    ImGui::SliderInt("blayers", &bloon_layers, 1, 100);
-    ImGui::SliderFloat("bspeed", &bloon_speed, 1, 1000);
-    //NO DEBUG
+    text = "health: " + std::to_string(health);
+    ImGui::Text(text.c_str());
 
 
     if(ImGui::Button("Dart monkey"))
@@ -270,15 +266,7 @@ void Game::drawGUI()
             ImVec2 mousePos = ImGui::GetMousePos();
             glm::vec3 color;
 
-
-            if(map_layout->canPlace(glm::vec2(mousePos.x, mousePos.y), size))
-                std::cout << "pog" << '\n';
-            else
-                std::cout << "not pog" << '\n';
-
-
             if(cost > this->money || !map_layout->canPlace(glm::vec2(mousePos.x, mousePos.y), size))
-                //color = glm::vec3(1.0f, 0.6f, 0.6f);
                 color = glm::vec3(1.0f, 0.3f, 0.3f);
             else
                 color = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -296,6 +284,29 @@ void Game::drawGUI()
             break;
         }
     }
+
+    ImGui::Text("\n\nDEBUG");
+    //DEBUG
+    ImGui::SliderInt("brate", &bloon_rate, 1, 60);
+    ImGui::SliderInt("blayers", &bloon_layers, 1, 100);
+    ImGui::SliderFloat("bspeed", &bloon_speed, 1, 1000);
+    if(ImGui::Button("clear bloons"))
+    {
+        while(!this->bloons.empty())
+        {
+            bloons.erase(bloons.begin());
+        }
+    }
+
+    if(ImGui::Button("clear monkeys"))
+    {
+        while(!this->monkeys.empty())
+        {
+            monkeys.erase(monkeys.begin());
+        }
+        map_layout->reset_placing_map();
+    }
+    //NO DEBUG
 
     ImGui::End();
 
@@ -357,6 +368,8 @@ void Game::cleanup()
     {
         if(!bloons[i]->exists())
         {
+            if(bloons[i]->get_layers() > 0)
+                health -= bloons[i]->get_layers();
             bloons.erase(bloons.begin() + i);
             i--;
         }

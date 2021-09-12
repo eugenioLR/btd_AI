@@ -29,6 +29,7 @@ public:
     glm::vec2 get_pos();
     double get_size();
     double get_progress();
+    int get_layers();
     bool exists();
     void pop();
     void draw(SpriteRenderer*);
