@@ -2,6 +2,8 @@
 
 #include "Projectile.hpp"
 
+#include <json/json.h>
+
 enum MonkeyState
 {
     CAN_SHOOT,
@@ -11,7 +13,7 @@ enum MonkeyState
 enum MonkeyType
 {
     DART_MONKEY,
-    TACK_SOOTER,
+    TACK_SHOTER,
     CANNON,
     SUPER_MONKEY
 };
@@ -22,6 +24,8 @@ protected:
     long id;
     glm::vec2 pos;
     int cost;
+    //int up_1_cost, up_2_cost;
+    int upgrade1, upgrade2;
     int sell_value;
     float dir;
     float cooldown;
@@ -29,15 +33,19 @@ protected:
     int range;
     int penetration;
     MonkeyState state;
-    int update1;
-    int update2;
     bool isExisting;
 public:
+	int up_1_cost, up_2_cost;
+    bool selected;
     int size;
+    MonkeyType type;
     Monkey(glm::vec2);
     Monkey(glm::vec2, float, int);
+    glm::vec2 get_pos();
     int get_cost();
+    int get_upgrade_cost(int);
     bool exists();
+    virtual void upgrade(int) = 0;
     static void init();
     virtual void shoot(glm::vec2, std::vector<Projectile*>*) = 0;
     void update(float, std::vector<Bloon*>, std::vector<Projectile*>*);
@@ -50,6 +58,7 @@ protected:
     DartMonkey(glm::vec2, float, int);
 public:
     DartMonkey(glm::vec2);
+    void upgrade(int);
     void shoot(glm::vec2, std::vector<Projectile*>*);
     void draw(SpriteRenderer*);
 };
@@ -58,6 +67,7 @@ class Cannon : public Monkey
 {
 public:
     Cannon(glm::vec2);
+    void upgrade(int);
     void shoot(glm::vec2, std::vector<Projectile*>*);
     void draw(SpriteRenderer*);
 };
@@ -66,6 +76,7 @@ class TackShooter : public Monkey
 {
 public:
     TackShooter(glm::vec2);
+    void upgrade(int);
     void shoot(glm::vec2, std::vector<Projectile*>*);
     void draw(SpriteRenderer*);
 };
@@ -74,6 +85,7 @@ class SuperMonkey : public DartMonkey
 {
 public:
     SuperMonkey(glm::vec2);
+    void upgrade(int);
     void shoot(glm::vec2, std::vector<Projectile*>*);
     void draw(SpriteRenderer*);
 };

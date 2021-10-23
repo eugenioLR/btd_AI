@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Bloon.hpp"
+#include <vector>
+
 
 class Projectile
 {
@@ -17,6 +19,6 @@ public:
     ~Projectile();
     bool exists();
     static void init();
-    void update(float, std::vector<Bloon*>);
+    void update(float, std::vector<Bloon*>, int*);
     void draw(SpriteRenderer*);
 };

@@ -5,7 +5,7 @@ MapLayout::MapLayout()
 
 }
 
-MapLayout::MapLayout(std::string map_skin_path, std::string placing_path, std::string bloon_path_path)
+MapLayout::MapLayout(std::string map_skin_path, std::string placing_path, std::string bloon_path_path, std::string map_rounds_path)
 {
     //Load background image
     ResourceManager::loadTexture(map_skin_path.c_str(), true, "map_skin");
@@ -21,7 +21,6 @@ MapLayout::MapLayout(std::string map_skin_path, std::string placing_path, std::s
         }
     }
 
-
     std::ifstream ifs(bloon_path_path);
     Json::Value path_json;
     ifs >> path_json;
@@ -32,6 +31,8 @@ MapLayout::MapLayout(std::string map_skin_path, std::string placing_path, std::s
         point = glm::vec2(path_points[i][0].asDouble(), path_points[i][1].asDouble());
         bloon_path.push(point);
     }
+
+	this->round_gen = *(new RoundGenerator(map_rounds_path));
 }
 
 MapLayout::~MapLayout()
@@ -39,7 +40,13 @@ MapLayout::~MapLayout()
 }
 
 std::queue<glm::vec2> MapLayout::get_path()
-{    return this->bloon_path;
+{
+	return this->bloon_path;
+}
+
+void MapLayout::update(double deltatime, std::vector<Bloon*>* bloon_list)
+{
+	this->round_gen.update(deltatime, bloon_list, this->bloon_path);
 }
 
 void MapLayout::draw(SpriteRenderer* renderer)
@@ -125,4 +132,14 @@ void MapLayout::canPlace_rec(int size, int pos, int width, int height, bool* can
             }
         }
     }
+}
+
+void MapLayout::bloon_popped(Bloon bloon)
+{
+	this->round_gen.bloon_popped(bloon);
+}
+
+void MapLayout::start_round()
+{
+	this->round_gen.start_round();
 }

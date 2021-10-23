@@ -22,6 +22,7 @@ private:
     ImGuiIO io;
     GUI_state state;
     MonkeyType m_type;
+    Monkey* selected;
     SpriteRenderer* sRenderer;
     std::vector<Bloon*> bloons;
     std::vector<Monkey*> monkeys;

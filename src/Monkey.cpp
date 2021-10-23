@@ -8,11 +8,12 @@ Monkey::Monkey(glm::vec2 pos)
     this->id = nextmonkeyid++;
     this->pos = pos;
     this->timer = 0;
-    this->update1 = 0;
-    this->update2 = 0;
+    this->upgrade1 = 0;
+    this->upgrade2 = 0;
     this->dir = 3*M_PI/2;
     this->state = COOLDOWN;
     this->isExisting = true;
+    this->selected = false;
 }
 
 Monkey::Monkey(glm::vec2 pos, float cooldown, int range)
@@ -22,16 +23,39 @@ Monkey::Monkey(glm::vec2 pos, float cooldown, int range)
     this->cooldown = cooldown;
     this->timer = 0;
     this->range = range;
-    this->update1 = 0;
-    this->update2 = 0;
+    this->upgrade1 = 0;
+    this->upgrade2 = 0;
     this->dir = 3*M_PI/2;
     this->state = COOLDOWN;
     this->isExisting = true;
+    this->selected = false;
 }
+
+glm::vec2 Monkey::get_pos()
+{
+    return this->pos;
+}
+
 
 int Monkey::get_cost()
 {
     return this->cost;
+}
+
+int Monkey::get_upgrade_cost(int index)
+{
+    int price;
+    switch (index) {
+        case 1:
+            price = up_1_cost;
+            break;
+        case 2:
+            price = up_2_cost;
+            break;
+        default:
+            price = 0;
+    }
+    return price;
 }
 
 bool Monkey::exists()
@@ -41,8 +65,8 @@ bool Monkey::exists()
 
 void Monkey::init()
 {
-    ResourceManager::loadTexture("data/towers/dart_monkey/skin.png", true, "dart_monkey");
-    ResourceManager::loadTexture("data/towers/tack_shooter/skin.png", true, "tack_shooter");
+    ResourceManager::loadTexture("data/towers/dart_monkey/skin_monkey.png", true, "dart_monkey");
+    ResourceManager::loadTexture("data/towers/tack_shooter/skin_monkey.png", true, "tack_shooter");
 }
 
 void Monkey::update(float deltatime, std::vector<Bloon*> bloons, std::vector<Projectile*>* projectiles)
@@ -113,11 +137,32 @@ DartMonkey::DartMonkey(glm::vec2 pos) : Monkey(pos)
     Json::Value stats_json;
     ifs >> stats_json;
     this->cost = stats_json["cost"].asInt();
+    this->up_1_cost = stats_json["up_1_cost"].asInt();
+    this->up_2_cost = stats_json["up_2_cost"].asInt();
     this->sell_value = stats_json["sell_value"].asInt();
     this->cooldown = stats_json["cooldown"].asFloat();
     this->range = stats_json["range"].asInt();
     this->penetration = stats_json["penetration"].asInt();
     this->size = stats_json["size"].asInt();
+    this->type = DART_MONKEY;
+}
+
+void DartMonkey::upgrade(int index)
+{
+    switch (index) {
+        case 1:
+        {
+            upgrade1++;
+            this->penetration++;
+            break;
+        }
+        case 2:
+        {
+            upgrade2++;
+            this->range += this->range/4;
+            break;
+        }
+    }
 }
 
 void DartMonkey::shoot(glm::vec2 bloon_pos, std::vector<Projectile*>* projectiles)
@@ -137,7 +182,12 @@ void DartMonkey::shoot(glm::vec2 bloon_pos, std::vector<Projectile*>* projectile
 void DartMonkey::draw(SpriteRenderer* renderer)
 {
     Texture2D spriteTex = ResourceManager::getTexture("dart_monkey");
-    renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), glm::vec2(spriteTex.Width, spriteTex.Height), this->dir*(180/M_PI), glm::vec3(1.0f, 1.0f, 1.0f), true);
+    glm::vec3 color;
+    if(this->selected)
+        color = glm::vec3(0.75f, 0.75f, 0.75f);
+    else
+        color = glm::vec3(1.0f, 1.0f, 1.0f);
+    renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), glm::vec2(spriteTex.Width, spriteTex.Height), this->dir*(180/M_PI), color, true);
 }
 
 //Tack Tower
@@ -147,11 +197,32 @@ TackShooter::TackShooter(glm::vec2 pos) : Monkey(pos)
     Json::Value stats_json;
     ifs >> stats_json;
     this->cost = stats_json["cost"].asInt();
+    this->up_1_cost = stats_json["up_1_cost"].asInt();
+    this->up_2_cost = stats_json["up_2_cost"].asInt();
     this->sell_value = stats_json["sell_value"].asInt();
     this->cooldown = stats_json["cooldown"].asFloat();
     this->range = stats_json["range"].asInt();
     this->penetration = stats_json["penetration"].asInt();
     this->size = stats_json["size"].asInt();
+    this->type = TACK_SHOTER;
+}
+
+void TackShooter::upgrade(int index)
+{
+    switch (index) {
+        case 1:
+        {
+            upgrade1++;
+            this->penetration++;
+            break;
+        }
+        case 2:
+        {
+            upgrade2++;
+            this->range += this->range/4;
+            break;
+        }
+    }
 }
 
 void TackShooter::shoot(glm::vec2 bloon_pos, std::vector<Projectile*>* projectiles)
@@ -165,5 +236,11 @@ void TackShooter::shoot(glm::vec2 bloon_pos, std::vector<Projectile*>* projectil
 void TackShooter::draw(SpriteRenderer* renderer)
 {
     Texture2D spriteTex = ResourceManager::getTexture("tack_shooter");
-    renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), glm::vec2(spriteTex.Width, spriteTex.Height), 0, glm::vec3(1.0f, 1.0f, 1.0f), true);
+    glm::vec3 color;
+    if(this->selected)
+        color = glm::vec3(0.75f, 0.75f, 0.75f);
+    else
+        color = glm::vec3(1.0f, 1.0f, 1.0f);
+
+    renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), glm::vec2(spriteTex.Width, spriteTex.Height), 0, color, true);
 }

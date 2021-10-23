@@ -1,5 +1,7 @@
 {
     "cost": 400,
+    "up_1_cost": 250,
+    "up_2_cost": 150,
     "sell_value": 350,
     "cooldown": 1.333,
     "range": 70,

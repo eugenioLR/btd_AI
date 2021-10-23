@@ -24,10 +24,10 @@ bool Projectile::exists()
 
 void Projectile::init()
 {
-    ResourceManager::loadTexture("data/milk_shot.png", true, "dart");
+    ResourceManager::loadTexture("data/projectiles/dart.png", true, "dart");
 }
 
-void Projectile::update(float deltatime, std::vector<Bloon*> bloons)
+void Projectile::update(float deltatime, std::vector<Bloon*> bloons, int* money)
 {
     bool bloon_hit = false;
     Bloon* b;
@@ -46,6 +46,7 @@ void Projectile::update(float deltatime, std::vector<Bloon*> bloons)
             this->hitBloons.insert(b->get_id());
             bloon_hit = true;
             penetration--;
+            (*money)++;
         }
     }
 
@@ -58,6 +59,7 @@ void Projectile::update(float deltatime, std::vector<Bloon*> bloons)
 void Projectile::draw(SpriteRenderer* renderer)
 {
     Texture2D spriteTex = ResourceManager::getTexture("dart");
-    renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), glm::vec2(spriteTex.Width, spriteTex.Height), this->dir*180/M_PI, glm::vec3(1.0f, 1.0f, 1.0f), true);
-    //renderer->drawSprite(ResourceManager::getTexture("dart"), this->pos, glm::vec2(1.0f,1.0f), this->dir*180/M_PI, glm::vec3(1.0f, 1.0f, 1.0f));
+    glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);
+
+    renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), glm::vec2(spriteTex.Width, spriteTex.Height), this->dir*180/M_PI, color, true);
 }
