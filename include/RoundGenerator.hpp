@@ -18,13 +18,17 @@ private:
 	int round;
 	std::map<int, bloon_info_t> bloons_to_place;
 	std::map<int, bloon_info_t> bloons_left;
+	std::map<int, bloon_info_t> auto_base;
+	int auto_reward;
 	double time;
 public:
 	RoundGenerator();
 	RoundGenerator(std::string);
+	int get_round();
 	void start_round();
+	void override_round(int);
 	void read_round();
 	void update(double, std::vector<Bloon*>*, std::queue<glm::vec2>);
-	void bloon_popped(Bloon);
+	void bloon_popped(Bloon, int*);
 	bool round_finished();
 };

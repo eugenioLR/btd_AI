@@ -134,12 +134,22 @@ void MapLayout::canPlace_rec(int size, int pos, int width, int height, bool* can
     }
 }
 
-void MapLayout::bloon_popped(Bloon bloon)
+void MapLayout::bloon_popped(Bloon bloon, int* money)
 {
-	this->round_gen.bloon_popped(bloon);
+	this->round_gen.bloon_popped(bloon, money);
 }
 
 void MapLayout::start_round()
 {
 	this->round_gen.start_round();
+}
+
+void MapLayout::override_round(int new_round)
+{
+	this->round_gen.override_round(new_round);
+}
+
+int MapLayout::get_round()
+{
+	return this->round_gen.get_round();
 }

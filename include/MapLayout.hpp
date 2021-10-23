@@ -23,6 +23,8 @@ public:
     void reset_placing_map();
     void place(glm::vec2, int);
     bool canPlace(glm::vec2, int);
-	void bloon_popped(Bloon);
+	void bloon_popped(Bloon, int*);
 	void start_round();
+	void override_round(int);
+	int get_round();
 };

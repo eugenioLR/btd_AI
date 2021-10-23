@@ -6,6 +6,7 @@ int Ttime = 0;
 int bloon_layers = 1;
 float bloon_speed = 300;
 bool debug_active = false;
+int new_round = 0;
 
 Game::Game(int width, int height)
 {
@@ -55,6 +56,9 @@ void Game::addMonkey(glm::vec2 pos, MonkeyType m_type, bool is_free)
         case TACK_SHOTER:
             monkey = new TackShooter(pos);
             break;
+		case SUPER_MONKEY:
+			monkey = new SuperMonkey(pos);
+			break;
         default:
             monkey = new DartMonkey(pos);
     }
@@ -185,7 +189,7 @@ void Game::logic(double deltatime)
 
 void Game::drawGUI()
 {
-
+	std::string text;
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
@@ -193,14 +197,13 @@ void Game::drawGUI()
     //layout
     ImGui::Begin("    ");
 
-	//restrict window movement
-
-
     ImGui::SetWindowPos(ImVec2(485, 0));
     ImGui::SetWindowSize(ImVec2(215, 446));
 
-
-    std::string text = "money: " + std::to_string(money) + "$";
+	int curr_round = std::max(map_layout->get_round(), 0);
+	text = "ROUND " + std::to_string(curr_round);
+    ImGui::Text(text.c_str());
+    text = "money: " + std::to_string(money) + "$";
     ImGui::Text(text.c_str());
     text = "health: " + std::to_string(health);
     ImGui::Text(text.c_str());
@@ -426,6 +429,7 @@ void Game::drawGUI()
 		this->map_layout->start_round();
 
     //DEBUG
+
     ImGui::Text("\n\n");
     if(ImGui::Button("DEBUG"))
         debug_active = !debug_active;
@@ -433,10 +437,18 @@ void Game::drawGUI()
     if(debug_active)
     {
 
-        ImGui::SliderInt("brate", &bloon_rate, 1, 60);
+        /*
+		ImGui::SliderInt("brate", &bloon_rate, 1, 60);
         ImGui::SliderInt("blayers", &bloon_layers, 1, 100);
         ImGui::SliderFloat("bspeed", &bloon_speed, 1, 1000);
-        if(ImGui::Button("clear bloons"))
+		*/
+		ImGui::SliderInt("Round", &new_round, 1, 60);
+		if(ImGui::Button("Override Round"))
+		{
+			this->map_layout->override_round(new_round);
+		}
+
+		if(ImGui::Button("clear bloons"))
         {
             while(!this->bloons.empty())
                 bloons.erase(bloons.begin());
@@ -522,7 +534,7 @@ void Game::cleanup()
     {
         if(!bloons[i]->exists())
         {
-			this->map_layout->bloon_popped(* bloons[i]);
+			this->map_layout->bloon_popped(*bloons[i], &money);
             if(bloons[i]->get_layers() > 0)
                 health -= bloons[i]->get_layers();
             bloons.erase(bloons.begin() + i);

@@ -40,6 +40,7 @@ public:
     int size;
     MonkeyType type;
     Monkey(glm::vec2);
+	Monkey(glm::vec2, std::string);
     Monkey(glm::vec2, float, int);
     glm::vec2 get_pos();
     int get_cost();
@@ -58,6 +59,7 @@ protected:
     DartMonkey(glm::vec2, float, int);
 public:
     DartMonkey(glm::vec2);
+	DartMonkey(glm::vec2, std::string);
     void upgrade(int);
     void shoot(glm::vec2, std::vector<Projectile*>*);
     void draw(SpriteRenderer*);
@@ -85,7 +87,7 @@ class SuperMonkey : public DartMonkey
 {
 public:
     SuperMonkey(glm::vec2);
-    void upgrade(int);
-    void shoot(glm::vec2, std::vector<Projectile*>*);
+    //void upgrade(int);
+    //void shoot(glm::vec2, std::vector<Projectile*>*);
     void draw(SpriteRenderer*);
 };
