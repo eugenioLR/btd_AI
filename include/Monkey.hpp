@@ -2,8 +2,6 @@
 
 #include "Projectile.hpp"
 
-#include <json/json.h>
-
 enum MonkeyState
 {
     CAN_SHOOT,

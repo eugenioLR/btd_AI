@@ -13,7 +13,6 @@ Game::Game(int width, int height)
     this->width = width;
     this->height = height;
     this->money = 650;
-    //this->money = 500000;
     this->health = 40;
     this->round = 1;
     this->state = IDLE;
@@ -56,6 +55,9 @@ void Game::addMonkey(glm::vec2 pos, MonkeyType m_type, bool is_free)
         case TACK_SHOTER:
             monkey = new TackShooter(pos);
             break;
+        case CANNON:
+			monkey = new Cannon(pos);
+			break;
 		case SUPER_MONKEY:
 			monkey = new SuperMonkey(pos);
 			break;
@@ -126,6 +128,7 @@ void Game::init()
     this->sRenderer = new SpriteRenderer(ResourceManager::getShader("sprite"));
 
     this->map_layout = new MapLayout("data/map1/skin.png", "data/map1/placing_map.png", "data/map1/info.json", "data/map1/rounds.json");
+    ResourceManager::loadTexture("data/misc/circle.png", true, "circle");
     Bloon::init();
     Monkey::init();
     Projectile::init();
@@ -216,7 +219,6 @@ void Game::drawGUI()
             state = HOLDING_MONKEY;
     }
 
-
     if(ImGui::Button("Tack Shooter:  400$"))
     {
         this->m_type = TACK_SHOTER;
@@ -250,10 +252,12 @@ void Game::drawGUI()
     {
         case HOLDING_MONKEY:
         {
-            Texture2D spriteTex;
+            Texture2D spriteTex, circleTex;
             int cost, size;
             if(selected != nullptr)
                 selected->selected = false;
+            
+            circleTex = ResourceManager::getTexture("circle");
             switch(m_type)
             {
                 case DART_MONKEY:
@@ -276,9 +280,19 @@ void Game::drawGUI()
                     size = stats_json["size"].asInt();
                     break;
                 }
+                case CANNON:
+                {
+                    spriteTex = ResourceManager::getTexture("cannon");
+                    std::ifstream ifs("data/towers/cannon/stats.json");
+                    Json::Value stats_json;
+                    ifs >> stats_json;
+                    cost = stats_json["cost"].asInt();
+                    size = stats_json["size"].asInt();
+                    break;
+                }
                 default:
                 {
-                    spriteTex = ResourceManager::getTexture("dart_monkey");
+                    spriteTex = ResourceManager::getTexture("super_monkey");
                     cost = 0;
                     size = 0;
                 }
@@ -289,9 +303,18 @@ void Game::drawGUI()
             if(cost <= this->money && map_layout->canPlace(glm::vec2(mousePos.x, mousePos.y), size))
                 color = glm::vec3(1.0f, 1.0f, 1.0f);
             else
-                color = glm::vec3(1.0f, 0.3f, 0.3f);
+            {
+                color = glm::vec3(1.0f, 0.2f, 0.2f);
+                if(cost > this->money)
+                    ImGui::Text("Not enough money");
+                
+                if(!map_layout->canPlace(glm::vec2(mousePos.x, mousePos.y), size))
+                    ImGui::Text("Can't be placed");
+            }
 
-            sRenderer->drawSprite(spriteTex, glm::vec2(mousePos.x, mousePos.y), glm::vec2(spriteTex.Width, spriteTex.Height), 0, color, true);
+            sRenderer->drawSprite(circleTex, glm::vec2(mousePos.x, mousePos.y), 1, 0, color, true);
+
+            sRenderer->drawSprite(spriteTex, glm::vec2(mousePos.x, mousePos.y), 1, 0, color, true);
             if(ImGui::IsMouseDown(ImGuiMouseButton_Left))
             {
                 this->state = IDLE;
@@ -353,7 +376,7 @@ void Game::drawGUI()
                     monkey_type = "Tack shooter";
                     break;
                 case CANNON:
-                    monkey_type = "Dart monkey";
+                    monkey_type = "Cannon";
                     break;
                 case SUPER_MONKEY:
                     monkey_type = "Super monkey";

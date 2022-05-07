@@ -90,9 +90,34 @@ bool Monkey::exists()
 
 void Monkey::init()
 {
-    ResourceManager::loadTexture("data/towers/dart_monkey/skin_monkey.png", true, "dart_monkey");
-    ResourceManager::loadTexture("data/towers/tack_shooter/skin_monkey.png", true, "tack_shooter");
-	ResourceManager::loadTexture("data/towers/super_monkey/robo_cow2.png", true, "super_monkey");
+    std::ifstream ifs("data/config.json");
+    Json::Value config_json;
+    ifs >> config_json;
+    int skin_type = config_json["skin_type"].asInt();
+
+    std::string skin_name;
+    switch(skin_type)
+    {
+        case 0:
+        {
+            skin_name = "skin_monkey.png";
+            break;
+        }
+        case 1:
+        {
+            skin_name = "skin_cow.png";
+            break;
+        }
+        default:
+        {
+            skin_name = "skin_monkey.png";
+        }
+    }
+    std::string a = "";
+    ResourceManager::loadTexture(("data/towers/dart_monkey/" + skin_name).c_str(), true, "dart_monkey");
+    ResourceManager::loadTexture(("data/towers/tack_shooter/" + skin_name).c_str(), true, "tack_shooter");
+	ResourceManager::loadTexture(("data/towers/cannon/" + skin_name).c_str(), true, "cannon");
+    ResourceManager::loadTexture(("data/towers/super_monkey/" + skin_name).c_str(), true, "super_monkey");
 }
 
 void Monkey::update(float deltatime, std::vector<Bloon*> bloons, std::vector<Projectile*>* projectiles)
@@ -207,7 +232,7 @@ void DartMonkey::draw(SpriteRenderer* renderer)
         color = glm::vec3(0.75f, 0.75f, 0.75f);
     else
         color = glm::vec3(1.0f, 1.0f, 1.0f);
-    renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), glm::vec2(spriteTex.Width, spriteTex.Height), this->dir*(180/M_PI), color, true);
+    renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), 1, this->dir*(180/M_PI), color, true);
 }
 
 //Super Tower
@@ -259,7 +284,7 @@ void SuperMonkey::draw(SpriteRenderer* renderer)
         color = glm::vec3(0.75f, 0.75f, 0.75f);
     else
         color = glm::vec3(1.0f, 1.0f, 1.0f);
-    renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), glm::vec2(spriteTex.Width, spriteTex.Height), this->dir*(180/M_PI), color, true);
+    renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), 1, this->dir*(180/M_PI), color, true);
 }
 
 //Tack Tower
@@ -314,5 +339,57 @@ void TackShooter::draw(SpriteRenderer* renderer)
     else
         color = glm::vec3(1.0f, 1.0f, 1.0f);
 
-    renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), glm::vec2(spriteTex.Width, spriteTex.Height), 0, color, true);
+    renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), 1, 0, color, true);
+}
+
+//Tack Tower
+Cannon::Cannon(glm::vec2 pos) : Monkey(pos)
+{
+    std::ifstream ifs("data/towers/cannon/stats.json");
+    Json::Value stats_json;
+    ifs >> stats_json;
+    this->cost = stats_json["cost"].asInt();
+    this->up_1_cost = stats_json["up_1_cost"].asInt();
+    this->up_2_cost = stats_json["up_2_cost"].asInt();
+    this->sell_value = stats_json["sell_value"].asInt();
+    this->cooldown = stats_json["cooldown"].asFloat();
+    this->range = stats_json["range"].asInt();
+    this->penetration = stats_json["penetration"].asInt();
+    this->size = stats_json["size"].asInt();
+    this->type = CANNON;
+}
+
+void Cannon::upgrade(int index)
+{
+    switch (index) {
+        case 1:
+        {
+            upgrade1++;
+            this->penetration++;
+            break;
+        }
+        case 2:
+        {
+            upgrade2++;
+            this->range += this->range/4;
+            break;
+        }
+    }
+}
+
+void Cannon::shoot(glm::vec2 bloon_pos, std::vector<Projectile*>* projectiles)
+{
+    projectiles->push_back(new Projectile(this->pos, dir, 500, this->penetration));
+}
+
+void Cannon::draw(SpriteRenderer* renderer)
+{
+    Texture2D spriteTex = ResourceManager::getTexture("cannon");
+    glm::vec3 color;
+    if(this->selected)
+        color = glm::vec3(0.75f, 0.75f, 0.75f);
+    else
+        color = glm::vec3(1.0f, 1.0f, 1.0f);
+
+    renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), 1, this->dir*(180/M_PI), color, true);
 }

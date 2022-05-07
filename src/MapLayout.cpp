@@ -52,7 +52,7 @@ void MapLayout::update(double deltatime, std::vector<Bloon*>* bloon_list)
 void MapLayout::draw(SpriteRenderer* renderer)
 {
     Texture2D spriteTex = ResourceManager::getTexture("map_skin");
-    renderer->drawSprite(spriteTex, glm::vec2(OFFSET_X, 0.0f), glm::vec2(spriteTex.Width, spriteTex.Height), 0, glm::vec3(1.0f, 1.0f, 1.0f), false);
+    renderer->drawSprite(spriteTex, glm::vec2(OFFSET_X, 0.0f), 1, 0, glm::vec3(1.0f, 1.0f, 1.0f), false);
     //sRenderer->drawSprite(spriteTex, glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 1.0f), 0, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 

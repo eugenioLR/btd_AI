@@ -175,5 +175,5 @@ void Bloon::draw(SpriteRenderer* renderer)
 	}
     glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);
 
-    renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), glm::vec2(spriteTex.Width, spriteTex.Height), 0, color, true);
+    renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), 1, 0, color, true);
 }

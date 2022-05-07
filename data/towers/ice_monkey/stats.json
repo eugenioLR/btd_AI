@@ -1,0 +1,10 @@
+{
+    "cost": 4000,
+    "up_1_cost": 210,
+    "up_2_cost": 100,
+    "sell_value": 3200,
+    "cooldown": 2.503,
+    "range": 140,
+    "penetration": 1,
+    "size": 25
+}

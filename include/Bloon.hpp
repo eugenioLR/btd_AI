@@ -14,8 +14,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <queue>
+#include <string>
 #include <set>
 #include <bitset>
+#include <json/json.h>
 
 #define WIDTH 700
 #define HEIGHT 446

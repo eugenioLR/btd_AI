@@ -24,7 +24,30 @@ bool Projectile::exists()
 
 void Projectile::init()
 {
-    ResourceManager::loadTexture("data/projectiles/dart.png", true, "dart");
+    std::ifstream ifs("data/config.json");
+    Json::Value config_json;
+    ifs >> config_json;
+    int skin_type = config_json["skin_type"].asInt();
+
+    std::string skin_name;
+    switch(skin_type)
+    {
+        case 0:
+        {
+            skin_name = "dart.png";
+            break;
+        }
+        case 1:
+        {
+            skin_name = "milk_shot.png";
+            break;
+        }
+        default:
+        {
+            skin_name = "skin_monkey.png";
+        }
+    }
+    ResourceManager::loadTexture(("data/projectiles/" + skin_name).c_str(), true, "dart");
 }
 
 void Projectile::update(float deltatime, std::vector<Bloon*> bloons, int* money)
@@ -61,5 +84,5 @@ void Projectile::draw(SpriteRenderer* renderer)
     Texture2D spriteTex = ResourceManager::getTexture("dart");
     glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);
 
-    renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), glm::vec2(spriteTex.Width, spriteTex.Height), this->dir*180/M_PI, color, true);
+    renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), 1, this->dir*180/M_PI, color, true);
 }
