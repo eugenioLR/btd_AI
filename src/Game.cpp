@@ -1,19 +1,20 @@
 #include "Game.hpp"
 
 //---------DELETE THIS----------
-int bloon_rate = 60;
-int Ttime = 0;
+//int bloon_rate = 60;
+//int Ttime = 0;
 int bloon_layers = 1;
 float bloon_speed = 300;
-bool debug_active = false;
-int new_round = 0;
+//bool debug_active = false;
+//int new_round = 0;
 
 Game::Game(int width, int height)
 {
     this->width = width;
     this->height = height;
     this->money = 650;
-    this->health = 40;
+    //this->health = 40;
+    this->health = 4000;
     this->round = 1;
     this->state = IDLE;
     this->m_type = DART_MONKEY;
@@ -127,8 +128,9 @@ void Game::init()
 
     this->sRenderer = new SpriteRenderer(ResourceManager::getShader("sprite"));
 
-    this->map_layout = new MapLayout("data/map1/skin.png", "data/map1/placing_map.png", "data/map1/info.json", "data/map1/rounds.json");
+    this->map_layout = new MapLayout("data/maps/map1/skin.png", "data/maps/map1/placing_map.png", "data/maps/map1/info.json", "data/maps/map1/rounds.json");
     ResourceManager::loadTexture("data/misc/circle.png", true, "circle");
+    ResourceManager::loadTexture("data/misc/circle_solid.png", true, "circle_solid");
     Bloon::init();
     Monkey::init();
     Projectile::init();
@@ -182,7 +184,7 @@ void Game::logic(double deltatime)
         monkeys[i]->update(deltatime, bloons, &projectiles);
 
     for(int i = 0; i < projectiles.size(); i++)
-        projectiles[i]->update(deltatime, bloons, &money);
+        projectiles[i]->update(deltatime, bloons, &projectiles, &money);
 
     for(int i = 0; i < bloons.size(); i++)
         bloons[i]->update(deltatime);
@@ -252,12 +254,13 @@ void Game::drawGUI()
     {
         case HOLDING_MONKEY:
         {
-            Texture2D spriteTex, circleTex;
-            int cost, size;
+            Texture2D spriteTex, circleTex, circleSolidTex;
+            int cost, size, range;
             if(selected != nullptr)
                 selected->selected = false;
             
             circleTex = ResourceManager::getTexture("circle");
+            circleSolidTex = ResourceManager::getTexture("circle_solid");
             switch(m_type)
             {
                 case DART_MONKEY:
@@ -266,6 +269,7 @@ void Game::drawGUI()
                     std::ifstream ifs("data/towers/dart_monkey/stats.json");
                     Json::Value stats_json;
                     ifs >> stats_json;
+                    range = stats_json["range"].asInt();
                     cost = stats_json["cost"].asInt();
                     size = stats_json["size"].asInt();
                     break;
@@ -276,6 +280,7 @@ void Game::drawGUI()
                     std::ifstream ifs("data/towers/tack_shooter/stats.json");
                     Json::Value stats_json;
                     ifs >> stats_json;
+                    range = stats_json["range"].asInt();
                     cost = stats_json["cost"].asInt();
                     size = stats_json["size"].asInt();
                     break;
@@ -286,6 +291,18 @@ void Game::drawGUI()
                     std::ifstream ifs("data/towers/cannon/stats.json");
                     Json::Value stats_json;
                     ifs >> stats_json;
+                    range = stats_json["range"].asInt();
+                    cost = stats_json["cost"].asInt();
+                    size = stats_json["size"].asInt();
+                    break;
+                }
+                case SUPER_MONKEY:
+                {
+                    spriteTex = ResourceManager::getTexture("super_monkey");
+                    std::ifstream ifs("data/towers/super_monkey/stats.json");
+                    Json::Value stats_json;
+                    ifs >> stats_json;
+                    range = stats_json["range"].asInt();
                     cost = stats_json["cost"].asInt();
                     size = stats_json["size"].asInt();
                     break;
@@ -293,8 +310,8 @@ void Game::drawGUI()
                 default:
                 {
                     spriteTex = ResourceManager::getTexture("super_monkey");
-                    cost = 0;
-                    size = 0;
+                    cost = -1;
+                    size = -1;
                 }
             }
             ImVec2 mousePos = ImGui::GetMousePos();
@@ -309,12 +326,19 @@ void Game::drawGUI()
                     ImGui::Text("Not enough money");
                 
                 if(!map_layout->canPlace(glm::vec2(mousePos.x, mousePos.y), size))
-                    ImGui::Text("Can't be placed");
+                    ImGui::Text("Can't be placed there");
             }
 
-            sRenderer->drawSprite(circleTex, glm::vec2(mousePos.x, mousePos.y), 1, 0, color, true);
+            // Draw range
+            sRenderer->drawSprite(circleTex, glm::vec2(mousePos.x, mousePos.y), ((float) range)/256, 0, color, true);
 
+            // Draw tower sprite
             sRenderer->drawSprite(spriteTex, glm::vec2(mousePos.x, mousePos.y), 1, 0, color, true);
+
+            // Draw space occupied
+            if(debug_active)
+                sRenderer->drawSprite(circleSolidTex, glm::vec2(mousePos.x, mousePos.y), ((float) size)/256, 0, color, true);
+
             if(ImGui::IsMouseDown(ImGuiMouseButton_Left))
             {
                 this->state = IDLE;
@@ -558,7 +582,7 @@ void Game::cleanup()
         if(!bloons[i]->exists())
         {
 			this->map_layout->bloon_popped(*bloons[i], &money);
-            if(bloons[i]->get_layers() > 0)
+            if(health > 0 && bloons[i]->get_layers() > 0)
                 health -= bloons[i]->get_layers();
             bloons.erase(bloons.begin() + i);
             i--;

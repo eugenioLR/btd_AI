@@ -5,6 +5,6 @@
     "sell_value": 3200,
     "cooldown": 1.376,
     "range": 140,
-    "penetration": 20,
+    "penetration": 2000,
     "size": 15
 }

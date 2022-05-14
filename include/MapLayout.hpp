@@ -11,8 +11,8 @@ private:
     std::bitset<WIDTH * HEIGHT> placing_map;
     std::string placing_path;
 	RoundGenerator round_gen;
-    void place_rec(int, int, int, int, std::set<int>*);
-    void canPlace_rec(int, int, int, int, bool*, std::set<int>*);
+    void place_rec(int, int, int, int, int, std::set<int>*);
+    void canPlace_rec(int, int, int, int, int, bool*, std::set<int>*);
 public:
     MapLayout();
     ~MapLayout();

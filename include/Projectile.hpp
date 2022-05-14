@@ -6,19 +6,43 @@
 
 class Projectile
 {
-private:
+protected:
     long id;
     glm::vec2 pos;
     std::set<long> hitBloons;
     float dir;
     float speed;
     int penetration;
+    float lifetime;
     bool isExisting;
 public:
-    Projectile(glm::vec2, float, float, int);
-    ~Projectile();
+    Projectile(glm::vec2, float, float, int, float);
     bool exists();
     static void init();
-    void update(float, std::vector<Bloon*>, int*);
+    virtual void update(float, std::vector<Bloon*>, std::vector<Projectile*>*, int*) = 0;
+    virtual void draw(SpriteRenderer*) = 0;
+};
+
+class Bomb : public Projectile
+{
+public:
+    Bomb(glm::vec2, float, float, int);
+    void update(float, std::vector<Bloon*>, std::vector<Projectile*>*, int*);
+    void draw(SpriteRenderer*);
+};
+
+class Explosion : public Projectile
+{
+public:
+    Explosion(glm::vec2, float, float, int);
+    void update(float, std::vector<Bloon*>, std::vector<Projectile*>*, int*);
+    void draw(SpriteRenderer*);
+};
+
+class Dart : public Projectile
+{
+public:
+    Dart(glm::vec2, float, float, int);
+    void update(float, std::vector<Bloon*>, std::vector<Projectile*>*, int*);
     void draw(SpriteRenderer*);
 };

@@ -51,9 +51,8 @@ void MapLayout::update(double deltatime, std::vector<Bloon*>* bloon_list)
 
 void MapLayout::draw(SpriteRenderer* renderer)
 {
-    Texture2D spriteTex = ResourceManager::getTexture("map_skin");
-    renderer->drawSprite(spriteTex, glm::vec2(OFFSET_X, 0.0f), 1, 0, glm::vec3(1.0f, 1.0f, 1.0f), false);
-    //sRenderer->drawSprite(spriteTex, glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 1.0f), 0, glm::vec3(0.0f, 1.0f, 0.0f));
+    Texture2D mapTex = ResourceManager::getTexture("map_skin");
+    renderer->drawSprite(mapTex, glm::vec2(OFFSET_X, 0.0f), 1, 0, glm::vec3(1.0f, 1.0f, 1.0f), false);
 }
 
 void MapLayout::reset_placing_map()
@@ -70,15 +69,19 @@ void MapLayout::reset_placing_map()
 
 void MapLayout::place(glm::vec2 pos, int size)
 {
-    Texture2D spriteTex = ResourceManager::getTexture("map_skin");
+    Texture2D mapTex = ResourceManager::getTexture("map_skin");
     std::set<int> closed;
-    place_rec(size, ((int) pos.y) * spriteTex.Width + ((int) pos.x), spriteTex.Width, spriteTex.Height, &closed);
+    int pos_lin = ((int) pos.y) * mapTex.Width + ((int) pos.x);
+    place_rec(size, pos_lin, pos_lin, mapTex.Width, mapTex.Height, &closed);
 }
 
-void MapLayout::place_rec(int size, int pos, int width, int height, std::set<int>* closed)
+void MapLayout::place_rec(int size, int pos, int origin, int width, int height, std::set<int>* closed)
 {
     bool inBounds = pos >= 0 && pos < placing_map.size();
-    if(size > 0 && inBounds)
+    int x, y, x_origin, y_origin;
+    x_origin = origin%width;
+    y_origin = origin/width;
+    if(inBounds)
     {
         if(closed->find(pos) == closed->end() && placing_map[pos])
         {
@@ -91,7 +94,10 @@ void MapLayout::place_rec(int size, int pos, int width, int height, std::set<int
             offsets.push_back(-1);
             for(int offset : offsets)
             {
-                place_rec(size - 1, pos + offset, width, height, closed);
+                x = (pos + offset)%width - x_origin;
+                y = (pos + offset)/width - y_origin;
+                if(x*x + y*y <= size*size)
+                    place_rec(size, pos + offset, origin, width, height, closed);
             }
         }
     }
@@ -99,23 +105,28 @@ void MapLayout::place_rec(int size, int pos, int width, int height, std::set<int
 
 bool MapLayout::canPlace(glm::vec2 pos, int size)
 {
-    Texture2D spriteTex = ResourceManager::getTexture("map_skin");
+    Texture2D mapTex = ResourceManager::getTexture("map_skin");
 
-    bool can_be_placed = pos.x >= 0 && pos.x < spriteTex.Width && pos.y >= 0 && pos.y < spriteTex.Height;
+    bool can_be_placed = pos.x >= 0 && pos.x < mapTex.Width && pos.y >= 0 && pos.y < mapTex.Height;
 
     if(can_be_placed)
     {
+        
         std::set<int> closed;
-        canPlace_rec(size, ((int) pos.y) * spriteTex.Width + ((int) pos.x), spriteTex.Width, spriteTex.Height, &can_be_placed, &closed);
+        int pos_lin = ((int) pos.y) * mapTex.Width + ((int) pos.x);
+        canPlace_rec(size, pos_lin, pos_lin, mapTex.Width, mapTex.Height, &can_be_placed, &closed);
     }
 
     return can_be_placed;
 }
 
-void MapLayout::canPlace_rec(int size, int pos, int width, int height, bool* can_be_placed, std::set<int>* closed)
+void MapLayout::canPlace_rec(int size, int pos, int origin, int width, int height, bool* can_be_placed, std::set<int>* closed)
 {
     bool inBounds = pos >= 0 && pos < placing_map.size();
-    if(size > 0 && (*can_be_placed) && inBounds)
+    int x, y, x_origin, y_origin;
+    x_origin = origin%width;
+    y_origin = origin/width;
+    if(*can_be_placed && inBounds)
     {
         *can_be_placed = placing_map[pos];
         if(closed->find(pos) == closed->end() && placing_map[pos])
@@ -128,7 +139,10 @@ void MapLayout::canPlace_rec(int size, int pos, int width, int height, bool* can
             offsets.push_back(-1);
             for(int offset : offsets)
             {
-                canPlace_rec(size - 1, pos + offset, width, height, can_be_placed, closed);
+                x = (pos + offset)%width - x_origin;
+                y = (pos + offset)/width - y_origin;
+                if(x*x + y*y <= size*size)
+                    canPlace_rec(size - 1, pos + offset, origin, width, height, can_be_placed, closed);
             }
         }
     }

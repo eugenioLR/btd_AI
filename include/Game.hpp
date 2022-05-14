@@ -31,6 +31,8 @@ private:
     int money;
     int health;
     int width, height;
+    bool debug_active = false;
+    int new_round;
     bool quit;
 public:
     MapLayout* map_layout;

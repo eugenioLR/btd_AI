@@ -221,17 +221,24 @@ void DartMonkey::shoot(glm::vec2 bloon_pos, std::vector<Projectile*>* projectile
     glm::vec2 aux = bloon_pos - newPosition;
     float newDir = atan2(aux.y, aux.x);
 
-    projectiles->push_back(new Projectile(newPosition, newDir, 500, this->penetration));
+    projectiles->push_back(new Dart(newPosition, newDir, 500, this->penetration));
 }
 
 void DartMonkey::draw(SpriteRenderer* renderer)
 {
-    Texture2D spriteTex = ResourceManager::getTexture("dart_monkey");
+    Texture2D spriteTex = ResourceManager::getTexture("dart_monkey"),
+              circleTex = ResourceManager::getTexture("circle");
     glm::vec3 color;
     if(this->selected)
-        color = glm::vec3(0.75f, 0.75f, 0.75f);
+    {
+        renderer->drawSprite(circleTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), ((float) range)/256, 0, glm::vec3(1.0f, 1.0f, 1.0f), true);
+        color = glm::vec3(0.9f, 0.9f, 0.9f);
+    }
     else
+    {
         color = glm::vec3(1.0f, 1.0f, 1.0f);
+    }
+    
     renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), 1, this->dir*(180/M_PI), color, true);
 }
 
@@ -278,13 +285,21 @@ void DartMonkey::shoot(glm::vec2 bloon_pos, std::vector<Projectile*>* projectile
 
 void SuperMonkey::draw(SpriteRenderer* renderer)
 {
-    Texture2D spriteTex = ResourceManager::getTexture("super_monkey");
+    Texture2D spriteTex = ResourceManager::getTexture("super_monkey"),
+              circleTex = ResourceManager::getTexture("circle");
     glm::vec3 color;
     if(this->selected)
-        color = glm::vec3(0.75f, 0.75f, 0.75f);
+    {
+        renderer->drawSprite(circleTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), ((float) range)/256, 0, glm::vec3(1.0f, 1.0f, 1.0f), true);
+        color = glm::vec3(0.9f, 0.9f, 0.9f);
+    }
     else
+    {
         color = glm::vec3(1.0f, 1.0f, 1.0f);
-    renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), 1, this->dir*(180/M_PI), color, true);
+    }
+
+
+    renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), 1, this->dir*(180/M_PI), glm::vec3(1.0f, 1.0f, 1.0f), true);
 }
 
 //Tack Tower
@@ -326,18 +341,24 @@ void TackShooter::shoot(glm::vec2 bloon_pos, std::vector<Projectile*>* projectil
 {
     for(float i = 0; i < 8; i += 1.0)
     {
-        projectiles->push_back(new Projectile(this->pos, (i * 2.0 * M_PI) / 8.0, 500, this->penetration));
+        projectiles->push_back(new Dart(this->pos, (i * 2.0 * M_PI) / 8.0, 500, this->penetration));
     }
 }
 
 void TackShooter::draw(SpriteRenderer* renderer)
 {
-    Texture2D spriteTex = ResourceManager::getTexture("tack_shooter");
+    Texture2D spriteTex = ResourceManager::getTexture("tack_shooter"),
+              circleTex = ResourceManager::getTexture("circle");
     glm::vec3 color;
     if(this->selected)
-        color = glm::vec3(0.75f, 0.75f, 0.75f);
+    {
+        renderer->drawSprite(circleTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), ((float) range)/256, 0, glm::vec3(1.0f, 1.0f, 1.0f), true);
+        color = glm::vec3(0.9f, 0.9f, 0.9f);
+    }
     else
+    {
         color = glm::vec3(1.0f, 1.0f, 1.0f);
+    }
 
     renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), 1, 0, color, true);
 }
@@ -379,17 +400,23 @@ void Cannon::upgrade(int index)
 
 void Cannon::shoot(glm::vec2 bloon_pos, std::vector<Projectile*>* projectiles)
 {
-    projectiles->push_back(new Projectile(this->pos, dir, 500, this->penetration));
+    projectiles->push_back(new Bomb(this->pos, dir, 500, this->penetration));
 }
 
 void Cannon::draw(SpriteRenderer* renderer)
 {
-    Texture2D spriteTex = ResourceManager::getTexture("cannon");
+    Texture2D spriteTex = ResourceManager::getTexture("cannon"),
+              circleTex = ResourceManager::getTexture("circle");
     glm::vec3 color;
     if(this->selected)
-        color = glm::vec3(0.75f, 0.75f, 0.75f);
+    {
+        renderer->drawSprite(circleTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), ((float) range)/256, 0, glm::vec3(1.0f, 1.0f, 1.0f), true);
+        color = glm::vec3(0.9f, 0.9f, 0.9f);
+    }
     else
+    {
         color = glm::vec3(1.0f, 1.0f, 1.0f);
-
+    }
+    
     renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), 1, this->dir*(180/M_PI), color, true);
 }

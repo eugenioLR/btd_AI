@@ -15,8 +15,8 @@ RoundGenerator::RoundGenerator(std::string rounds_path)
 	bloon_info_t aux_info;
 	for(int i = 0; i < auto_round_base.size(); i++)
 	{
-		aux_info.b_amount = auto_round_base[i]["number"].asInt() + round;
-		aux_info.b_freq = auto_round_base[i]["freq"].asDouble() + ((double)round/100.0);
+		aux_info.b_amount = auto_round_base[i]["number"].asInt();// + round;
+		aux_info.b_freq = auto_round_base[i]["freq"].asDouble();// + ((double)round/100.0);
 		aux_info.b_speed = 150;
 		aux_info.timer = -auto_round_base[i]["time_offset"].asDouble();
 		this->auto_base[auto_round_base[i]["type"].asInt()] = aux_info;
