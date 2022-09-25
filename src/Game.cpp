@@ -40,38 +40,58 @@ void Game::decrease_money(int amount)
         money = 0;
 }
 
-void Game::addMonkey(glm::vec2 pos, MonkeyType m_type)
+void Game::addTower(glm::vec2 pos, TowerType m_type)
 {
-    addMonkey(pos, m_type, false);
+    addTower(pos, m_type, false);
 }
 
-void Game::addMonkey(glm::vec2 pos, MonkeyType m_type, bool is_free)
+void Game::addTower(glm::vec2 pos, TowerType m_type, bool is_free)
 {
-    Monkey* monkey;
+    Tower* tower;
     switch (m_type)
     {
         case DART_MONKEY:
-            monkey = new DartMonkey(pos);
+            tower = new DartTower(pos);
             break;
         case TACK_SHOTER:
-            monkey = new TackShooter(pos);
+            tower = new TackShooter(pos);
             break;
         case CANNON:
-			monkey = new Cannon(pos);
+			tower = new Cannon(pos);
 			break;
 		case SUPER_MONKEY:
-			monkey = new SuperMonkey(pos);
+			tower = new SuperTower(pos);
 			break;
         default:
-            monkey = new DartMonkey(pos);
+            tower = new DartTower(pos);
     }
-    if(map_layout->canPlace(pos, monkey->size)){
-        if(this->money >= monkey->get_cost() || is_free)
+    if(map_layout->canPlace(pos, tower->size)){
+        if(this->money >= tower->get_cost() || is_free)
         {
-            this->monkeys.push_back(monkey);
+            this->towers.push_back(tower);
             if(!is_free)
-                this->money -= monkey->get_cost();
-            map_layout->place(pos, monkey->size);
+                this->money -= tower->get_cost();
+            map_layout->place(pos, tower->size);
+        }
+    }
+}
+
+void Game::sellTower(int idx)
+{
+    this->sellTower(this->towers[idx]);
+}
+
+void Game::sellTower(Tower* tower)
+{
+    int money_back = tower->sell();
+
+    this->increase_money(money_back);
+    this->map_layout->reset_placing_map();
+    for(int i = 0; i < this->towers.size(); i++)
+    {
+        if(towers[i]->get_id() != tower->get_id())
+        {
+            this->map_layout->place(towers[i]->get_pos(), towers[i]->size);
         }
     }
 }
@@ -132,7 +152,7 @@ void Game::init()
     ResourceManager::loadTexture("data/misc/circle.png", true, "circle");
     ResourceManager::loadTexture("data/misc/circle_solid.png", true, "circle_solid");
     Bloon::init();
-    Monkey::init();
+    Tower::init();
     Projectile::init();
 }
 
@@ -157,13 +177,16 @@ void Game::main_loop()
 
 void Game::no_graphics_loop()
 {
-    double deltatime= 1.0/60;
+    double deltatime = 1.0/60;
+
+    Actor* actor;
 
     quit = false;
 
     while(!quit)
     {
         handle_events();
+        learn(actor);
         logic(deltatime);
         cleanup();
     }
@@ -178,10 +201,17 @@ void Game::handle_events()
     glfwPollEvents();
 }
 
+void Game::learn(Actor* actor){
+    Action a = actor->choose_action(this->towers, this->bloons, this->money, this->health);
+    std::cout << a.action_name << std::endl;
+
+    actor->update_reward(this->bloons, this->money, this->health);
+}
+
 void Game::logic(double deltatime)
 {
-    for(int i = 0; i < monkeys.size(); i++)
-        monkeys[i]->update(deltatime, bloons, &projectiles);
+    for(int i = 0; i < towers.size(); i++)
+        towers[i]->update(deltatime, bloons, &projectiles);
 
     for(int i = 0; i < projectiles.size(); i++)
         projectiles[i]->update(deltatime, bloons, &projectiles, &money);
@@ -207,14 +237,14 @@ void Game::drawGUI()
 
 	int curr_round = std::max(map_layout->get_round(), 0);
 	text = "ROUND " + std::to_string(curr_round);
-    ImGui::Text(text.c_str());
+    ImGui::TextUnformatted(text.c_str());
     text = "money: " + std::to_string(money) + "$";
-    ImGui::Text(text.c_str());
+    ImGui::TextUnformatted(text.c_str());
     text = "health: " + std::to_string(health);
-    ImGui::Text(text.c_str());
+    ImGui::TextUnformatted(text.c_str());
 
 
-    if(ImGui::Button("Dart monkey:   250$"))
+    if(ImGui::Button("Dart tower:   250$"))
     {
         this->m_type = DART_MONKEY;
         if(state != HOLDING_MONKEY)
@@ -242,7 +272,7 @@ void Game::drawGUI()
             state = HOLDING_MONKEY;
     }
 
-    if(ImGui::Button("Super monkey: 4000$"))
+    if(ImGui::Button("Super tower: 4000$"))
     {
         this->m_type = SUPER_MONKEY;
         if(state != HOLDING_MONKEY)
@@ -323,10 +353,10 @@ void Game::drawGUI()
             {
                 color = glm::vec3(1.0f, 0.2f, 0.2f);
                 if(cost > this->money)
-                    ImGui::Text("Not enough money");
+                    ImGui::TextUnformatted("Not enough money");
                 
                 if(!map_layout->canPlace(glm::vec2(mousePos.x, mousePos.y), size))
-                    ImGui::Text("Can't be placed there");
+                    ImGui::TextUnformatted("Can't be placed there");
             }
 
             // Draw range
@@ -342,27 +372,27 @@ void Game::drawGUI()
             if(ImGui::IsMouseDown(ImGuiMouseButton_Left))
             {
                 this->state = IDLE;
-                addMonkey(glm::vec2(mousePos.x, mousePos.y), m_type);
+                addTower(glm::vec2(mousePos.x, mousePos.y), m_type);
             }
             break;
         }
 
         case IDLE:
         {
-            Monkey* aux = nullptr;
+            Tower* aux = nullptr;
             ImVec2 mousePos = ImGui::GetMousePos();
             glm::vec2 mouse = glm::vec2(mousePos.x, mousePos.y);
             float dist;
             if(ImGui::IsMouseDown(ImGuiMouseButton_Left))
             {
                 float min_dist = 10e100;
-                for(int i = 0; i < monkeys.size(); i++)
+                for(int i = 0; i < towers.size(); i++)
                 {
-                    dist = glm::length(monkeys[i]->get_pos() - mouse);
-                    if(dist < monkeys[i]->size && dist < min_dist)
+                    dist = glm::length(towers[i]->get_pos() - mouse);
+                    if(dist < towers[i]->size && dist < min_dist)
                     {
                         min_dist = dist;
-                        aux = monkeys[i];
+                        aux = towers[i];
                     }
                 }
 
@@ -381,42 +411,43 @@ void Game::drawGUI()
 
         case MONKEY_INFO:
         {
-            Monkey* aux = nullptr;
+            Tower* aux = nullptr;
             ImVec2 mousePos = ImGui::GetMousePos();
             glm::vec2 mouse = glm::vec2(mousePos.x, mousePos.y);
             float dist;
             bool click_outside = false;
 
-            ImGui::Text("\n");
+            ImGui::TextUnformatted("\n");
 
-            std::string monkey_type;
+            std::string tower_type;
 
             switch(selected->type)
             {
                 case DART_MONKEY:
-                    monkey_type = "Dart monkey";
+                    tower_type = "Dart tower";
                     break;
                 case TACK_SHOTER:
-                    monkey_type = "Tack shooter";
+                    tower_type = "Tack shooter";
                     break;
                 case CANNON:
-                    monkey_type = "Cannon";
+                    tower_type = "Cannon";
                     break;
                 case SUPER_MONKEY:
-                    monkey_type = "Super monkey";
+                    tower_type = "Super tower";
                     break;
                 default:
-                    monkey_type = "???";
+                    tower_type = "???";
 
             }
 
+            // Show tower name
+            ImGui::TextUnformatted(tower_type.c_str());
+            ImGui::TextUnformatted("\nUpdates:\n");
 
-            ImGui::Text(monkey_type.c_str());
-
-
+            // Show first update info
 			text = "Price: " + std::to_string(selected->up_1_cost) + "$";
-			ImGui::Text("Penetration");
-            ImGui::Text(text.c_str());
+			ImGui::TextUnformatted("Penetration");
+            ImGui::TextUnformatted(text.c_str());
             if(ImGui::Button("Upgrade 1"))
             {
                 if(selected->get_upgrade_cost(1) < money)
@@ -426,9 +457,10 @@ void Game::drawGUI()
                 }
             }
 
+            // Show first update info
 			text = "Price: " + std::to_string(selected->up_2_cost) + "$";
-			ImGui::Text("Range");
-            ImGui::Text(text.c_str());
+			ImGui::TextUnformatted("Range");
+            ImGui::TextUnformatted(text.c_str());
             if(ImGui::Button("Upgrade 2"))
             {
                 if(selected->get_upgrade_cost(2) < money)
@@ -438,19 +470,29 @@ void Game::drawGUI()
                 }
             }
 
+            // Show sell info
+            text = "Sell price: " + std::to_string(selected->get_sell_price()) + "$";
+            ImGui::TextUnformatted("\nSell:\n");
+            ImGui::TextUnformatted(text.c_str());
+            if(ImGui::Button("Sell"))
+            {
+                this->sellTower(selected);
+            }
+
+
             Texture2D spriteTex = ResourceManager::getTexture("map_skin");
             if(mouse.x < spriteTex.Width)
             {
                 if(ImGui::IsMouseDown(ImGuiMouseButton_Left))
                 {
                     float min_dist = 10e100;
-                    for(int i = 0; i < monkeys.size() && selected != nullptr; i++)
+                    for(int i = 0; i < towers.size() && selected != nullptr; i++)
                     {
-                        dist = glm::length(monkeys[i]->get_pos() - mouse);
-                        if(dist < monkeys[i]->size + 4 && dist < min_dist)
+                        dist = glm::length(towers[i]->get_pos() - mouse);
+                        if(dist < towers[i]->size + 4 && dist < min_dist)
                         {
                             min_dist = dist;
-                            aux = monkeys[i];
+                            aux = towers[i];
                         }
                     }
 
@@ -477,7 +519,7 @@ void Game::drawGUI()
 
     //DEBUG
 
-    ImGui::Text("\n\n");
+    ImGui::TextUnformatted("\n\n");
     if(ImGui::Button("DEBUG"))
         debug_active = !debug_active;
 
@@ -501,10 +543,10 @@ void Game::drawGUI()
                 bloons.erase(bloons.begin());
         }
 
-        if(ImGui::Button("clear monkeys"))
+        if(ImGui::Button("clear towers"))
         {
-            while(!this->monkeys.empty())
-                monkeys.erase(monkeys.begin());
+            while(!this->towers.empty())
+                towers.erase(towers.begin());
             map_layout->reset_placing_map();
         }
 
@@ -519,13 +561,13 @@ void Game::drawGUI()
         }
 
 		text = "Bloons on sceen: " + std::to_string(bloons.size());
-		ImGui::Text(text.c_str());
+		ImGui::TextUnformatted(text.c_str());
 
-		text = "Monkeys on sceen: " + std::to_string(monkeys.size());
-		ImGui::Text(text.c_str());
+		text = "Towers on sceen: " + std::to_string(towers.size());
+		ImGui::TextUnformatted(text.c_str());
 
 		text = "Projectiles on sceen: " + std::to_string(projectiles.size());
-		ImGui::Text(text.c_str());
+		ImGui::TextUnformatted(text.c_str());
     }
 
     ImGui::End();
@@ -549,8 +591,8 @@ void Game::draw(double deltatime)
     for(int i = 0; i < projectiles.size(); i++)
         projectiles[i]->draw(sRenderer);
 
-    for(int i = 0; i < monkeys.size(); i++)
-        monkeys[i]->draw(sRenderer);
+    for(int i = 0; i < towers.size(); i++)
+        towers[i]->draw(sRenderer);
 
     drawGUI();
 
@@ -559,11 +601,11 @@ void Game::draw(double deltatime)
 
 void Game::cleanup()
 {
-    for(int i = 0; i < monkeys.size(); i++)
+    for(int i = 0; i < towers.size(); i++)
     {
-        if(!monkeys[i]->exists())
+        if(!towers[i]->exists())
         {
-            monkeys.erase(monkeys.begin() + i);
+            towers.erase(towers.begin() + i);
             i--;
         }
     }

@@ -1,11 +1,11 @@
-#include "Monkey.hpp"
+#include "Tower.hpp"
 
-long nextmonkeyid = 0;
+long nexttowerid = 0;
 
 //General Tower
-Monkey::Monkey(glm::vec2 pos)
+Tower::Tower(glm::vec2 pos)
 {
-    this->id = nextmonkeyid++;
+    this->id = nexttowerid++;
     this->pos = pos;
     this->timer = 0;
     this->upgrade1 = 0;
@@ -16,13 +16,13 @@ Monkey::Monkey(glm::vec2 pos)
     this->selected = false;
 }
 
-Monkey::Monkey(glm::vec2 pos, std::string stats_path)
+Tower::Tower(glm::vec2 pos, std::string stats_path)
 {
 	std::ifstream ifs(stats_path);
     Json::Value stats_json;
     ifs >> stats_json;
 
-    this->id = nextmonkeyid++;
+    this->id = nexttowerid++;
     this->pos = pos;
 	this->cost = stats_json["cost"].asInt();
 	this->upgrade1 = 0;
@@ -41,9 +41,9 @@ Monkey::Monkey(glm::vec2 pos, std::string stats_path)
     this->size = stats_json["size"].asInt();
 }
 
-Monkey::Monkey(glm::vec2 pos, float cooldown, int range)
+Tower::Tower(glm::vec2 pos, float cooldown, int range)
 {
-    this->id = nextmonkeyid++;
+    this->id = nexttowerid++;
     this->pos = pos;
     this->cooldown = cooldown;
     this->timer = 0;
@@ -56,18 +56,30 @@ Monkey::Monkey(glm::vec2 pos, float cooldown, int range)
     this->selected = false;
 }
 
-glm::vec2 Monkey::get_pos()
+long Tower::get_id()
+{
+    return this->id;
+}
+
+glm::vec2 Tower::get_pos()
 {
     return this->pos;
 }
 
 
-int Monkey::get_cost()
+int Tower::get_cost()
 {
     return this->cost;
 }
 
-int Monkey::get_upgrade_cost(int index)
+
+int Tower::get_sell_price()
+{
+    return this->sell_value;
+}
+
+
+int Tower::get_upgrade_cost(int index)
 {
     int price;
     switch (index) {
@@ -83,12 +95,12 @@ int Monkey::get_upgrade_cost(int index)
     return price;
 }
 
-bool Monkey::exists()
+bool Tower::exists()
 {
     return this->isExisting;
 }
 
-void Monkey::init()
+void Tower::init()
 {
     std::ifstream ifs("data/config.json");
     Json::Value config_json;
@@ -120,7 +132,7 @@ void Monkey::init()
     ResourceManager::loadTexture(("data/towers/super_monkey/" + skin_name).c_str(), true, "super_monkey");
 }
 
-void Monkey::update(float deltatime, std::vector<Bloon*> bloons, std::vector<Projectile*>* projectiles)
+void Tower::update(float deltatime, std::vector<Bloon*> bloons, std::vector<Projectile*>* projectiles)
 {
     Bloon* b = nullptr;
     Bloon* target = nullptr;
@@ -175,24 +187,30 @@ void Monkey::update(float deltatime, std::vector<Bloon*> bloons, std::vector<Pro
         timer += deltatime;
 }
 
+int Tower::sell()
+{
+    this->isExisting = false;
+    return this->sell_value;
+}
+
 //Dart Tower
-DartMonkey::DartMonkey(glm::vec2 pos, float cooldown, int range) : Monkey(pos, cooldown, range)
+DartTower::DartTower(glm::vec2 pos, float cooldown, int range) : Tower(pos, cooldown, range)
 {
     this->cost = 250;
     this->sell_value = 200;
 }
 
-DartMonkey::DartMonkey(glm::vec2 pos, std::string stats_path) : Monkey(pos, stats_path)
+DartTower::DartTower(glm::vec2 pos, std::string stats_path) : Tower(pos, stats_path)
 {
     this->type = DART_MONKEY;
 }
 
-DartMonkey::DartMonkey(glm::vec2 pos) : Monkey(pos, "data/towers/dart_monkey/stats.json")
+DartTower::DartTower(glm::vec2 pos) : Tower(pos, "data/towers/dart_monkey/stats.json")
 {
     this->type = DART_MONKEY;
 }
 
-void DartMonkey::upgrade(int index)
+void DartTower::upgrade(int index)
 {
     switch (index) {
         case 1:
@@ -210,7 +228,7 @@ void DartMonkey::upgrade(int index)
     }
 }
 
-void DartMonkey::shoot(glm::vec2 bloon_pos, std::vector<Projectile*>* projectiles)
+void DartTower::shoot(glm::vec2 bloon_pos, std::vector<Projectile*>* projectiles)
 {
     glm::vec2 newPosition = this->pos;
     glm::vec2 offset = glm::vec2(20, 20);
@@ -224,7 +242,7 @@ void DartMonkey::shoot(glm::vec2 bloon_pos, std::vector<Projectile*>* projectile
     projectiles->push_back(new Dart(newPosition, newDir, 500, this->penetration));
 }
 
-void DartMonkey::draw(SpriteRenderer* renderer)
+void DartTower::draw(SpriteRenderer* renderer)
 {
     Texture2D spriteTex = ResourceManager::getTexture("dart_monkey"),
               circleTex = ResourceManager::getTexture("circle");
@@ -244,12 +262,12 @@ void DartMonkey::draw(SpriteRenderer* renderer)
 
 //Super Tower
 
-SuperMonkey::SuperMonkey(glm::vec2 pos) : DartMonkey(pos, std::string("data/towers/super_monkey/stats.json"))
+SuperTower::SuperTower(glm::vec2 pos) : DartTower(pos, std::string("data/towers/super_monkey/stats.json"))
 {
     this->type = SUPER_MONKEY;
 }
 
-/*void DartMonkey::upgrade(int index)
+/*void DartTower::upgrade(int index)
 {
     switch (index) {
         case 1:
@@ -268,7 +286,7 @@ SuperMonkey::SuperMonkey(glm::vec2 pos) : DartMonkey(pos, std::string("data/towe
 }*/
 
 /*
-void DartMonkey::shoot(glm::vec2 bloon_pos, std::vector<Projectile*>* projectiles)
+void DartTower::shoot(glm::vec2 bloon_pos, std::vector<Projectile*>* projectiles)
 {
     glm::vec2 newPosition = this->pos;
     glm::vec2 offset = glm::vec2(20, 20);
@@ -283,7 +301,7 @@ void DartMonkey::shoot(glm::vec2 bloon_pos, std::vector<Projectile*>* projectile
 }
 */
 
-void SuperMonkey::draw(SpriteRenderer* renderer)
+void SuperTower::draw(SpriteRenderer* renderer)
 {
     Texture2D spriteTex = ResourceManager::getTexture("super_monkey"),
               circleTex = ResourceManager::getTexture("circle");
@@ -303,7 +321,7 @@ void SuperMonkey::draw(SpriteRenderer* renderer)
 }
 
 //Tack Tower
-TackShooter::TackShooter(glm::vec2 pos) : Monkey(pos)
+TackShooter::TackShooter(glm::vec2 pos) : Tower(pos)
 {
     std::ifstream ifs("data/towers/tack_shooter/stats.json");
     Json::Value stats_json;
@@ -364,7 +382,7 @@ void TackShooter::draw(SpriteRenderer* renderer)
 }
 
 //Tack Tower
-Cannon::Cannon(glm::vec2 pos) : Monkey(pos)
+Cannon::Cannon(glm::vec2 pos) : Tower(pos)
 {
     std::ifstream ifs("data/towers/cannon/stats.json");
     Json::Value stats_json;

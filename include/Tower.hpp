@@ -2,13 +2,13 @@
 
 #include "Projectile.hpp"
 
-enum MonkeyState
+enum TowerState
 {
     CAN_SHOOT,
     COOLDOWN
 };
 
-enum MonkeyType
+enum TowerType
 {
     DART_MONKEY,
     TACK_SHOTER,
@@ -16,7 +16,7 @@ enum MonkeyType
     SUPER_MONKEY
 };
 
-class Monkey
+class Tower
 {
 protected:
     long id;
@@ -30,40 +30,43 @@ protected:
     float timer;
     int range;
     int penetration;
-    MonkeyState state;
+    TowerState state;
     bool isExisting;
 public:
 	int up_1_cost, up_2_cost;
     bool selected;
     int size;
-    MonkeyType type;
-    Monkey(glm::vec2);
-	Monkey(glm::vec2, std::string);
-    Monkey(glm::vec2, float, int);
+    TowerType type;
+    Tower(glm::vec2);
+	Tower(glm::vec2, std::string);
+    Tower(glm::vec2, float, int);
+    long get_id();
     glm::vec2 get_pos();
     int get_cost();
+    int get_sell_price();
     int get_upgrade_cost(int);
     bool exists();
     virtual void upgrade(int) = 0;
     static void init();
     virtual void shoot(glm::vec2, std::vector<Projectile*>*) = 0;
     void update(float, std::vector<Bloon*>, std::vector<Projectile*>*);
+    int sell();
     virtual void draw(SpriteRenderer*) = 0;
 };
 
-class DartMonkey : public Monkey
+class DartTower : public Tower
 {
 protected:
-    DartMonkey(glm::vec2, float, int);
+    DartTower(glm::vec2, float, int);
 public:
-    DartMonkey(glm::vec2);
-	DartMonkey(glm::vec2, std::string);
+    DartTower(glm::vec2);
+	DartTower(glm::vec2, std::string);
     void upgrade(int);
     void shoot(glm::vec2, std::vector<Projectile*>*);
     void draw(SpriteRenderer*);
 };
 
-class Cannon : public Monkey
+class Cannon : public Tower
 {
 public:
     Cannon(glm::vec2);
@@ -72,7 +75,7 @@ public:
     void draw(SpriteRenderer*);
 };
 
-class TackShooter : public Monkey
+class TackShooter : public Tower
 {
 public:
     TackShooter(glm::vec2);
@@ -81,10 +84,10 @@ public:
     void draw(SpriteRenderer*);
 };
 
-class SuperMonkey : public DartMonkey
+class SuperTower : public DartTower
 {
 public:
-    SuperMonkey(glm::vec2);
+    SuperTower(glm::vec2);
     //void upgrade(int);
     //void shoot(glm::vec2, std::vector<Projectile*>*);
     void draw(SpriteRenderer*);

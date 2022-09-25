@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AI/Actor.hpp"
 #include "MapLayout.hpp"
 
 enum GUI_state
@@ -21,11 +22,11 @@ private:
     unsigned int EBO;
     ImGuiIO io;
     GUI_state state;
-    MonkeyType m_type;
-    Monkey* selected;
+    TowerType m_type;
+    Tower* selected;
     SpriteRenderer* sRenderer;
     std::vector<Bloon*> bloons;
-    std::vector<Monkey*> monkeys;
+    std::vector<Tower*> towers;
     std::vector<Projectile*> projectiles;
     int round;
     int money;
@@ -41,12 +42,15 @@ public:
     ~Game();
     void increase_money(int);
     void decrease_money(int);
-    void addMonkey(glm::vec2, MonkeyType);
-    void addMonkey(glm::vec2, MonkeyType, bool);
+    void addTower(glm::vec2, TowerType);
+    void addTower(glm::vec2, TowerType, bool);
+    void sellTower(int);
+    void sellTower(Tower*);
     void addBloon();
     void init();
     void main_loop();
     void no_graphics_loop();
+    void learn(Actor*);
     void handle_events();
     void handle_gui_events();
     void logic(double deltatime);
