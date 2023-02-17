@@ -21,11 +21,14 @@ private:
 	std::map<int, bloon_info_t> auto_base;
 	int auto_reward;
 	double time;
+	bool round_running;
 public:
 	RoundGenerator();
 	RoundGenerator(std::string);
 	int get_round();
+	bool is_round_running();
 	void start_round();
+	void stop_round();
 	void override_round(int);
 	void read_round();
 	void update(double, std::vector<Bloon*>*, std::queue<glm::vec2>);

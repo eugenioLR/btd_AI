@@ -8,6 +8,7 @@ float bloon_speed = 300;
 //bool debug_active = false;
 //int new_round = 0;
 
+//
 Game::Game(int width, int height)
 {
     this->width = width;
@@ -175,23 +176,32 @@ void Game::main_loop()
     glfwTerminate();
 }
 
-void Game::no_graphics_loop()
+void Game::perform_action()
+{
+    // Do nothing, place tower, upgrade tower or sell tower
+}
+
+void Game::step()
 {
     double deltatime = 1.0/60;
 
-    Actor* actor;
+    logic(deltatime);
 
-    quit = false;
+    cleanup();
+}
 
-    while(!quit)
-    {
-        handle_events();
-        learn(actor);
-        logic(deltatime);
-        cleanup();
-    }
+GameState Game::get_gamestate()
+{
+    GameState game_info;
+    game_info.round = this->round;
+    game_info.money = this->money;
+    game_info.health = this->health;
 
-    std::cout << "done" << std::endl;
+    game_info.bloon_count = this->bloons.size();
+    game_info.tower_amount = this->towers.size();
+    game_info.bloon_progress = 0;
+
+    return game_info;
 }
 
 void Game::handle_events()
@@ -201,12 +211,12 @@ void Game::handle_events()
     glfwPollEvents();
 }
 
-void Game::learn(Actor* actor){
-    Action a = actor->choose_action(this->towers, this->bloons, this->money, this->health);
-    std::cout << a.action_name << std::endl;
+// void Game::learn(Actor* actor){
+//     Action a = actor->choose_action(this->towers, this->bloons, this->money, this->health);
+//     std::cout << a.action_name << std::endl;
 
-    actor->update_reward(this->bloons, this->money, this->health);
-}
+//     actor->update_reward(this->bloons, this->money, this->health);
+// }
 
 void Game::logic(double deltatime)
 {
@@ -238,9 +248,11 @@ void Game::drawGUI()
 	int curr_round = std::max(map_layout->get_round(), 0);
 	text = "ROUND " + std::to_string(curr_round);
     ImGui::TextUnformatted(text.c_str());
-    text = "money: " + std::to_string(money) + "$";
-    ImGui::TextUnformatted(text.c_str());
-    text = "health: " + std::to_string(health);
+    // text = "money: " + std::to_string(money) + "$";
+    // ImGui::TextUnformatted(text.c_str());
+    // text = "health: " + std::to_string(health);
+    // ImGui::TextUnformatted(text.c_str());
+    text = "money: " + std::to_string(money) + "$\thealth: " + std::to_string(health);
     ImGui::TextUnformatted(text.c_str());
 
 
@@ -442,11 +454,11 @@ void Game::drawGUI()
 
             // Show tower name
             ImGui::TextUnformatted(tower_type.c_str());
-            ImGui::TextUnformatted("\nUpdates:\n");
+            ImGui::TextUnformatted("Updates:\n");
 
             // Show first update info
 			text = "Price: " + std::to_string(selected->up_1_cost) + "$";
-			ImGui::TextUnformatted("Penetration");
+			ImGui::TextUnformatted("\nPenetration");
             ImGui::TextUnformatted(text.c_str());
             if(ImGui::Button("Upgrade 1"))
             {
@@ -459,7 +471,7 @@ void Game::drawGUI()
 
             // Show first update info
 			text = "Price: " + std::to_string(selected->up_2_cost) + "$";
-			ImGui::TextUnformatted("Range");
+			ImGui::TextUnformatted("\nRange");
             ImGui::TextUnformatted(text.c_str());
             if(ImGui::Button("Upgrade 2"))
             {
@@ -471,12 +483,12 @@ void Game::drawGUI()
             }
 
             // Show sell info
-            text = "Sell price: " + std::to_string(selected->get_sell_price()) + "$";
-            ImGui::TextUnformatted("\nSell:\n");
+            text = "\nSell price: " + std::to_string(selected->get_sell_price()) + "$";
             ImGui::TextUnformatted(text.c_str());
             if(ImGui::Button("Sell"))
             {
                 this->sellTower(selected);
+                this->state = IDLE;
             }
 
 
@@ -514,35 +526,47 @@ void Game::drawGUI()
         }
     }
 
-	if(ImGui::Button("START ROUND"))
+
+    bool round_disable = this->map_layout->is_round_running();
+
+    // Start round Button
+    if(round_disable)
+        ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(64,64,64,255));
+
+	if(ImGui::Button("START ROUND") && !round_disable)
 		this->map_layout->start_round();
 
-    //DEBUG
+    if(round_disable)
+        ImGui::PopStyleColor();
 
+    // Debug mode toggle
     ImGui::TextUnformatted("\n\n");
     if(ImGui::Button("DEBUG"))
         debug_active = !debug_active;
 
     if(debug_active)
     {
-
-        /*
-		ImGui::SliderInt("brate", &bloon_rate, 1, 60);
-        ImGui::SliderInt("blayers", &bloon_layers, 1, 100);
-        ImGui::SliderFloat("bspeed", &bloon_speed, 1, 1000);
-		*/
-		ImGui::SliderInt("Round", &new_round, 1, 60);
+        // Round Override
+		ImGui::SliderInt("Round", &new_round, 1, 10000);
 		if(ImGui::Button("Override Round"))
 		{
 			this->map_layout->override_round(new_round);
 		}
 
+        // Round Stop
+        if(ImGui::Button("Stop Round"))
+		{
+			this->map_layout->stop_round();
+		}
+
+        // Clear Bloons
 		if(ImGui::Button("clear bloons"))
         {
             while(!this->bloons.empty())
                 bloons.erase(bloons.begin());
         }
 
+        // Clear Towers
         if(ImGui::Button("clear towers"))
         {
             while(!this->towers.empty())
@@ -550,6 +574,7 @@ void Game::drawGUI()
             map_layout->reset_placing_map();
         }
 
+        // Add money
         if(ImGui::Button("add 100$"))
         {
             money += 100;
@@ -560,6 +585,7 @@ void Game::drawGUI()
             money += 1000;
         }
 
+        // Debug info
 		text = "Bloons on sceen: " + std::to_string(bloons.size());
 		ImGui::TextUnformatted(text.c_str());
 
@@ -574,7 +600,6 @@ void Game::drawGUI()
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
 }
 
 void Game::draw(double deltatime)
@@ -626,6 +651,9 @@ void Game::cleanup()
 			this->map_layout->bloon_popped(*bloons[i], &money);
             if(health > 0 && bloons[i]->get_layers() > 0)
                 health -= bloons[i]->get_layers();
+            
+            health = health > 0 ? health : 0;
+
             bloons.erase(bloons.begin() + i);
             i--;
         }

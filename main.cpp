@@ -6,8 +6,6 @@ int main()
 
     game->init();
 
-    //game->addMonkey(glm::vec2(250, 70), DART_MONKEY, true);
-
     game->main_loop();
 
     delete game;

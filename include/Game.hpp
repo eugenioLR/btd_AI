@@ -10,6 +10,17 @@ enum GUI_state
     HOLDING_MONKEY
 };
 
+struct GameState
+{
+    int round;
+    int money;
+    int health;
+
+    int bloon_count;
+    int tower_amount;
+    float bloon_progress;
+};
+
 class Game
 {
 private:
@@ -49,7 +60,11 @@ public:
     void addBloon();
     void init();
     void main_loop();
-    void no_graphics_loop();
+
+    void perform_action();
+    void step();
+    GameState get_gamestate();
+
     void learn(Actor*);
     void handle_events();
     void handle_gui_events();

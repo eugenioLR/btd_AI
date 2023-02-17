@@ -2,7 +2,7 @@
 
 RoundGenerator::RoundGenerator()
 {
-
+	this->round_running = false;
 }
 
 RoundGenerator::RoundGenerator(std::string rounds_path)
@@ -30,11 +30,17 @@ int RoundGenerator::get_round()
 	return this->round;
 }
 
+bool RoundGenerator::is_round_running()
+{
+	return this->round_running;
+}
+
 void RoundGenerator::start_round()
 {
-
-	if(this->round_finished())
+	if(!this->round_running)
 	{
+		this->round_running = true;
+
 		round++;
 		std::cout << "ROUND " << round << " started" << '\n';
 
@@ -45,7 +51,7 @@ void RoundGenerator::start_round()
 void RoundGenerator::override_round(int new_round)
 {
 
-	if(this->round_finished())
+	if(!this->round_running)
 	{
 		round = new_round;
 		std::cout << "ROUND " << round << " started" << '\n';
@@ -75,23 +81,23 @@ void RoundGenerator::read_round()
 		std::cout << "AUTO ROUND" << '\n';
 		Json::Value increments = rounds_json["auto"]["increments"]["wave"];
 		bloon_info_t aux_info;
+		int round_offset = this->round - rounds_json["rounds"].size();
+
 		for(int i = 0; i < increments.size(); i++)
 		{
 			aux_info = auto_base[i];
-			aux_info.b_amount += increments[i]["number"].asInt();
-			aux_info.b_freq += increments[i]["freq"].asDouble();
+			aux_info.b_amount = round_offset * increments[i]["number"].asInt() + auto_base[i].b_amount;
+			aux_info.b_freq = round_offset * increments[i]["freq"].asDouble() + auto_base[i].b_freq;
 			this->bloons_left[increments[i]["type"].asInt()] = aux_info;
 			this->bloons_to_place[increments[i]["type"].asInt()] = aux_info;
 		}
 	}
-
-
 }
 
 void RoundGenerator::update(double deltatime, std::vector<Bloon*>* bloon_list, std::queue<glm::vec2> bloon_path)
 {
 	Bloon* bloon;
-	if(!this->round_finished())
+	if(this->round_running)
 	{
 		std::map<int, bloon_info_t>::iterator elem;
        	for (elem = this->bloons_to_place.begin(); elem != this->bloons_to_place.end(); elem++)
@@ -106,6 +112,8 @@ void RoundGenerator::update(double deltatime, std::vector<Bloon*>* bloon_list, s
 			}
 
 		}
+
+		this->round_running = !this->round_finished();
 	}
 }
 
@@ -113,13 +121,31 @@ void RoundGenerator::bloon_popped(Bloon bloon, int* money)
 {
 	if(this->bloons_left.find(bloon.get_type()) != this->bloons_left.end())
 	{
-		this->bloons_left[bloon.get_type()].b_amount--;
+		if(this->bloons_left[bloon.get_type()].b_amount > 0)
+		{
+			this->bloons_left[bloon.get_type()].b_amount--;
+		}
 	}
 
 	if(this->bloons_left[bloon.get_type()].b_amount == 0)
 	{
 		*money += rounds_json["rounds"][this->round]["desc"]["reward"].asInt();
 	}
+}
+
+void RoundGenerator::stop_round()
+{
+	for (int i = 0; i < 6; i++)
+	{
+		this->bloons_left[i].b_amount = 0;
+	}
+
+	for(auto& elem : this->bloons_left)
+	{
+		elem.second.b_amount = 0;
+	}
+
+	this->round_running = false;
 }
 
 bool RoundGenerator::round_finished()

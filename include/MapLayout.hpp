@@ -25,6 +25,8 @@ public:
     bool canPlace(glm::vec2, int);
 	void bloon_popped(Bloon, int*);
 	void start_round();
+    void stop_round();
 	void override_round(int);
 	int get_round();
+    bool is_round_running();
 };

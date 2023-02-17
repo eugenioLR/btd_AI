@@ -158,6 +158,11 @@ void MapLayout::start_round()
 	this->round_gen.start_round();
 }
 
+void MapLayout::stop_round()
+{
+	this->round_gen.stop_round();
+}
+
 void MapLayout::override_round(int new_round)
 {
 	this->round_gen.override_round(new_round);
@@ -166,4 +171,9 @@ void MapLayout::override_round(int new_round)
 int MapLayout::get_round()
 {
 	return this->round_gen.get_round();
+}
+
+bool MapLayout::is_round_running()
+{
+	return this->round_gen.is_round_running();
 }
