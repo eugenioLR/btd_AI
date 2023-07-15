@@ -8,26 +8,45 @@ float bloon_speed = 300;
 //bool debug_active = false;
 //int new_round = 0;
 
-//
-Game::Game(int width, int height)
+Game::Game(int width, int height, bool use_graphics)
 {
     this->width = width;
     this->height = height;
     this->money = 650;
-    //this->health = 40;
-    this->health = 4000;
+    this->health = 40;
+    // this->health = 4000;
     this->round = 1;
     this->state = IDLE;
     this->m_type = DART_MONKEY;
+    this->use_graphics = use_graphics;
+    
+    if(this->use_graphics)
+        this->init();
 }
 
 Game::~Game()
 {
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-    glDeleteShader(shaderProgram);
+    if(use_graphics)
+    {
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+        glDeleteShader(shaderProgram);
+    }
+
     delete map_layout;
+}
+
+void Game::reset()
+{
+    this->money = 650;
+    this->health = 40;
+    this->round = 1;
+    this->state = IDLE;
+    this->m_type = DART_MONKEY;
+    this->bloons.clear();
+    this->towers.clear();
+    this->projectiles.clear();
 }
 
 void Game::increase_money(int amount)
@@ -99,8 +118,15 @@ void Game::sellTower(Tower* tower)
 
 void Game::addBloon()
 {
-    Bloon* bloon = new Bloon(this->map_layout->get_path(), 25, bloon_layers, bloon_speed);
+    // Bloon* bloon = new Bloon(this->map_layout->get_path(), 25, bloon_layers, bloon_speed);
+    // Bloon* bloon = new Bloon(this->map_layout->get_path(), BloonType::RED, bloon_speed);
+    Bloon* bloon = new Bloon(this->map_layout->get_path(), BloonType::BLACK, bloon_speed);
     this->bloons.push_back(bloon);
+}
+
+void Game::switch_debug()
+{
+    this->debug_active = !this->debug_active;
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -171,6 +197,8 @@ void Game::main_loop()
         handle_events();
         logic(deltatime);
         draw(deltatime);
+        drawGUI();
+        glfwSwapBuffers(window);
         cleanup();
     }
     glfwTerminate();
@@ -211,25 +239,38 @@ void Game::handle_events()
     glfwPollEvents();
 }
 
-// void Game::learn(Actor* actor){
-//     Action a = actor->choose_action(this->towers, this->bloons, this->money, this->health);
-//     std::cout << a.action_name << std::endl;
-
-//     actor->update_reward(this->bloons, this->money, this->health);
-// }
-
 void Game::logic(double deltatime)
 {
     for(int i = 0; i < towers.size(); i++)
         towers[i]->update(deltatime, bloons, &projectiles);
 
     for(int i = 0; i < projectiles.size(); i++)
-        projectiles[i]->update(deltatime, bloons, &projectiles, &money);
+        projectiles[i]->update(deltatime, &bloons, &projectiles, &money);
 
     for(int i = 0; i < bloons.size(); i++)
-        bloons[i]->update(deltatime);
+        bloons[i]->update(deltatime, &bloons);
 
 	map_layout->update(deltatime, &bloons);
+}
+
+void Game::draw(double deltatime)
+{
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    //game objects
+    map_layout->draw(sRenderer);
+
+    for(int i = 0; i < bloons.size(); i++)
+        bloons[i]->draw(sRenderer);
+
+    for(int i = 0; i < projectiles.size(); i++)
+        projectiles[i]->draw(sRenderer);
+
+    for(int i = 0; i < towers.size(); i++)
+        towers[i]->draw(sRenderer);
+
+    
 }
 
 void Game::drawGUI()
@@ -542,7 +583,7 @@ void Game::drawGUI()
     // Debug mode toggle
     ImGui::TextUnformatted("\n\n");
     if(ImGui::Button("DEBUG"))
-        debug_active = !debug_active;
+        this->switch_debug();
 
     if(debug_active)
     {
@@ -600,28 +641,6 @@ void Game::drawGUI()
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-}
-
-void Game::draw(double deltatime)
-{
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    //game objects
-    map_layout->draw(sRenderer);
-
-    for(int i = 0; i < bloons.size(); i++)
-        bloons[i]->draw(sRenderer);
-
-    for(int i = 0; i < projectiles.size(); i++)
-        projectiles[i]->draw(sRenderer);
-
-    for(int i = 0; i < towers.size(); i++)
-        towers[i]->draw(sRenderer);
-
-    drawGUI();
-
-    glfwSwapBuffers(window);
 }
 
 void Game::cleanup()

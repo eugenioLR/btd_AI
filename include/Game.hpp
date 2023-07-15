@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AI/Actor.hpp"
+//#include "AI/Actor.hpp"
 #include "MapLayout.hpp"
 
 enum GUI_state
@@ -46,11 +46,13 @@ private:
     bool debug_active = false;
     int new_round;
     bool quit;
+    bool use_graphics;
 public:
     MapLayout* map_layout;
     Game();
-    Game(int, int);
+    Game(int, int, bool);
     ~Game();
+    void reset();
     void increase_money(int);
     void decrease_money(int);
     void addTower(glm::vec2, TowerType);
@@ -58,6 +60,7 @@ public:
     void sellTower(int);
     void sellTower(Tower*);
     void addBloon();
+    void switch_debug();
     void init();
     void main_loop();
 
@@ -65,11 +68,12 @@ public:
     void step();
     GameState get_gamestate();
 
-    void learn(Actor*);
+    //void learn(Actor*);
     void handle_events();
     void handle_gui_events();
     void logic(double deltatime);
     void drawGUI();
     void draw(double deltatime);
     void cleanup();
+
 };

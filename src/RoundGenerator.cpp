@@ -22,7 +22,7 @@ RoundGenerator::RoundGenerator(std::string rounds_path)
 		this->auto_base[auto_round_base[i]["type"].asInt()] = aux_info;
 	}
 
-	this->round = -1; //-1 because at the start we add 1 and we get 0
+	this->round = 0;
 }
 
 int RoundGenerator::get_round()
@@ -41,7 +41,6 @@ void RoundGenerator::start_round()
 	{
 		this->round_running = true;
 
-		round++;
 		std::cout << "ROUND " << round << " started" << '\n';
 
 		this->read_round();
@@ -66,6 +65,19 @@ void RoundGenerator::read_round()
 	{
 		Json::Value current_round = rounds_json["rounds"][this->round]["wave"];
 		bloon_info_t aux_info;
+
+		for(int i = 0; i < 6; i++)
+		{
+			aux_info = auto_base[i];
+			aux_info.b_amount = 0;
+			aux_info.b_freq = 0;
+			aux_info.b_speed = 150;
+			aux_info.timer = 0;
+			this->bloons_left[i] = aux_info;
+			this->bloons_to_place[i] = aux_info;
+		}
+
+
 		for(int i = 0; i < current_round.size(); i++)
 		{
 			aux_info.b_amount = current_round[i]["number"].asInt();
@@ -82,6 +94,16 @@ void RoundGenerator::read_round()
 		Json::Value increments = rounds_json["auto"]["increments"]["wave"];
 		bloon_info_t aux_info;
 		int round_offset = this->round - rounds_json["rounds"].size();
+
+		for(int i = 0; i < 6; i++)
+		{
+			aux_info = auto_base[i];
+			aux_info.b_amount = 0;
+			aux_info.b_freq = 1;
+			this->bloons_left[increments[i]["type"].asInt()] = aux_info;
+			this->bloons_to_place[increments[i]["type"].asInt()] = aux_info;
+		}
+
 
 		for(int i = 0; i < increments.size(); i++)
 		{
@@ -105,7 +127,7 @@ void RoundGenerator::update(double deltatime, std::vector<Bloon*>* bloon_list, s
 			elem->second.timer += deltatime;
 			if(elem->second.timer > 1/elem->second.b_freq && elem->second.b_amount > 0)
 			{
-				bloon = new Bloon(bloon_path, elem->first, elem->second.b_speed);
+				bloon = new Bloon(bloon_path, static_cast<BloonType>(elem->first), elem->second.b_speed);
 			    bloon_list->push_back(bloon);
 				elem->second.timer = 0;
 				elem->second.b_amount--;
@@ -114,6 +136,8 @@ void RoundGenerator::update(double deltatime, std::vector<Bloon*>* bloon_list, s
 		}
 
 		this->round_running = !this->round_finished();
+		if(this->round_finished())
+			round++;
 	}
 }
 

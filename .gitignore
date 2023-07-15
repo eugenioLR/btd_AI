@@ -2,3 +2,4 @@ btd_ai
 build/*
 build
 imgui/.deps
+*.so

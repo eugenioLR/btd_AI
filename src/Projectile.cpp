@@ -2,9 +2,10 @@
 
 long nextprojid = 0;
 
-Projectile::Projectile(glm::vec2 pos, float dir, float speed, int penetration, float lifetime)
+Projectile::Projectile(glm::vec2 pos, DamageType dmg_type, float dir, float speed, int penetration, float lifetime)
 {
     this->id = nextprojid++;
+    this->dmg_type = dmg_type;
     this->pos = pos;
     this->dir = dir;
     this->speed = speed;
@@ -49,12 +50,12 @@ void Projectile::init()
 }
 
 // Bomb
-Bomb::Bomb(glm::vec2 pos, float dir, float speed, int penetration) : Projectile(pos, dir, speed, penetration, 0.7)
+Bomb::Bomb(glm::vec2 pos, float dir, float speed, int penetration) : Projectile(pos, NO_DMG, dir, speed, penetration, 0.7)
 {
 
 }
 
-void Bomb::update(float deltatime, std::vector<Bloon*> bloons, std::vector<Projectile*>* proj, int* money)
+void Bomb::update(float deltatime, std::vector<Bloon*>* bloons, std::vector<Projectile*>* proj, int* money)
 {
     bool bloon_hit = false;
     Bloon* b;
@@ -66,9 +67,9 @@ void Bomb::update(float deltatime, std::vector<Bloon*> bloons, std::vector<Proje
     this->pos += glm::vec2(cos(dir), sin(dir)) * deltatime * speed;
 
     //hit bloons (only one of them per frame and per projectile)
-    for(int i = 0; i < bloons.size() && this->penetration > 0 && !bloon_hit; i++)
+    for(int i = 0; i < bloons->size() && this->penetration > 0 && !bloon_hit; i++)
     {
-        b = bloons[i];
+        b = bloons->at(i);
         bloon_hit = glm::length(this->pos - b->get_pos()) < b->get_size();
     }
 
@@ -87,12 +88,12 @@ void Bomb::draw(SpriteRenderer* renderer)
 }
 
 // Explosion
-Explosion::Explosion(glm::vec2 pos, float dir, float speed, int penetration) : Projectile(pos, dir, speed, penetration, 0.07)
+Explosion::Explosion(glm::vec2 pos, float dir, float speed, int penetration) : Projectile(pos, EXPLOSION, dir, speed, penetration, 0.07)
 {
 
 }
 
-void Explosion::update(float deltatime, std::vector<Bloon*> bloons, std::vector<Projectile*>* proj, int* money)
+void Explosion::update(float deltatime, std::vector<Bloon*>* bloons, std::vector<Projectile*>* proj, int* money)
 {
     bool bloon_hit = false;
     Bloon* b;
@@ -106,13 +107,13 @@ void Explosion::update(float deltatime, std::vector<Bloon*> bloons, std::vector<
         this->isExisting = false;
 
         //hit all bloons in range
-        for(int i = 0; i < bloons.size() && this->penetration > 0; i++)
+        for(int i = 0; i < bloons->size() && this->penetration > 0; i++)
         {
-            b = bloons[i];
+            b = bloons->at(i);
 
             if(glm::length(this->pos - b->get_pos()) < b->get_size() + 40)
             {
-                b->pop();
+                b->pop(EXPLOSION);
                 penetration--;
                 (*money)++;
             }
@@ -129,12 +130,12 @@ void Explosion::draw(SpriteRenderer* renderer)
 }
 
 // Dart
-Dart::Dart(glm::vec2 pos, float dir, float speed, int penetration) : Projectile(pos, dir, speed, penetration, 0.7)
+Dart::Dart(glm::vec2 pos, float dir, float speed, int penetration) : Projectile(pos, PIERCE, dir, speed, penetration, 0.7)
 {
 
 }
 
-void Dart::update(float deltatime, std::vector<Bloon*> bloons, std::vector<Projectile*>* proj, int* money)
+void Dart::update(float deltatime, std::vector<Bloon*>* bloons, std::vector<Projectile*>* proj, int* money)
 {
     bool bloon_hit = false;
     Bloon* b;
@@ -146,13 +147,13 @@ void Dart::update(float deltatime, std::vector<Bloon*> bloons, std::vector<Proje
     this->pos += glm::vec2(cos(dir), sin(dir)) * deltatime * speed;
 
     //hit bloons (only one of them per frame and per projectile)
-    for(int i = 0; i < bloons.size() && this->penetration > 0 && !bloon_hit; i++)
+    for(int i = 0; i < bloons->size() && this->penetration > 0 && !bloon_hit; i++)
     {
-        b = bloons[i];
+        b = bloons->at(i);
 
         if(glm::length(this->pos - b->get_pos()) < b->get_size() && this->hitBloons.find(b->get_id()) == this->hitBloons.end())
         {
-            b->pop();
+            b->pop(PIERCE);
             this->hitBloons.insert(b->get_id());
             bloon_hit = true;
             penetration--;
