@@ -9,6 +9,7 @@ Bloon::Bloon()
     this->layers = 1;
     this->speed = 1;
     this->progress = 0;
+    this->frozen_counter = 0;
     this->is_frozen = false;
     this->isExisting = true;
 }
@@ -140,7 +141,15 @@ void Bloon::pop(DamageType dmg_type)
 {
 	if(std::find(this->resists.begin(), this->resists.end(), dmg_type) == this->resists.end())
 	{
-		this->layers--;
+		if(dmg_type == DamageType::FREEZE)
+		{
+			this->is_frozen = true;
+			this->frozen_counter = 1.5;
+		}
+		else
+		{
+			this->layers--;
+		}
 	}
 }
 
@@ -160,7 +169,11 @@ void Bloon::update(float deltatime, std::vector<Bloon*>* bloons)
 	float realspeed = (1.05 - speed_penalty) * speed;
     glm::vec2 direction = path.front() - this->pos;
     glm::vec2 step = deltatime * realspeed * glm::normalize(direction);
-    if(glm::length(direction) > glm::length(step)*1.25 && !this->path.empty())
+	if(this->is_frozen)
+	{
+
+	}
+    else if(glm::length(direction) > glm::length(step)*1.25 && !this->path.empty())
     {
         this->progress = (100 - path.size()) * 10000 - glm::length(direction);
         this->pos += step;
@@ -175,6 +188,13 @@ void Bloon::update(float deltatime, std::vector<Bloon*>* bloons)
         this->finished = true;
         this->isExisting = false;
     }
+
+	this->frozen_counter -= deltatime;
+	if(this->frozen_counter <= 0)
+	{
+		this->is_frozen = false;
+	}
+
 
 	Bloon* new_bloon;
 	std::queue<glm::vec2> path_left = this->path;
@@ -260,7 +280,18 @@ void Bloon::draw(SpriteRenderer* renderer)
 				spriteTex = ResourceManager::getTexture("bloon_unknown");
 		}
 	}
-    glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 color;
+	if(this->is_frozen)
+	{
+		// color = glm::vec3(0.85f, 0.94f, 1.0f);
+		// color = glm::vec3(1.14f, 1.05f, 1.0f);
+		color = glm::vec3(0.7f, 0.7f, 1.5f);
+	}
+	else
+	{
+		color = glm::vec3(1.0f, 1.0f, 1.0f);
+	}
+	
 
     renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), 1, 0, color, true);
 }

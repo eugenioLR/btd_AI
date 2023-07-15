@@ -39,6 +39,16 @@ public:
     void draw(SpriteRenderer*);
 };
 
+class FreezeArea : public Projectile
+{
+private:
+    float area;
+public:
+    FreezeArea(glm::vec2, float, float, int);
+    void update(float, std::vector<Bloon*>*, std::vector<Projectile*>*, int*);
+    void draw(SpriteRenderer*);
+};
+
 class Dart : public Projectile
 {
 public:

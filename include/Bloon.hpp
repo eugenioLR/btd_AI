@@ -55,6 +55,7 @@ private:
     int layers;
     float speed;
     double progress;
+    float frozen_counter;
     bool is_frozen;
     bool finished;
     bool isExisting;

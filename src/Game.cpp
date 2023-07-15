@@ -14,8 +14,7 @@ Game::Game(int width, int height, bool use_graphics)
     this->height = height;
     this->money = 650;
     this->health = 40;
-    // this->health = 4000;
-    this->round = 1;
+    this->round = 0;
     this->state = IDLE;
     this->m_type = DART_MONKEY;
     this->use_graphics = use_graphics;
@@ -41,7 +40,7 @@ void Game::reset()
 {
     this->money = 650;
     this->health = 40;
-    this->round = 1;
+    this->round = 0;
     this->state = IDLE;
     this->m_type = DART_MONKEY;
     this->bloons.clear();
@@ -58,6 +57,11 @@ void Game::decrease_money(int amount)
 {
     if((money -= amount) < 0)
         money = 0;
+}
+
+void Game::set_health(int health)
+{
+    this->health = health;
 }
 
 void Game::addTower(glm::vec2 pos, TowerType m_type)
@@ -78,6 +82,9 @@ void Game::addTower(glm::vec2 pos, TowerType m_type, bool is_free)
             break;
         case CANNON:
 			tower = new Cannon(pos);
+			break;
+        case ICE_MONKEY:
+			tower = new IceTower(pos);
 			break;
 		case SUPER_MONKEY:
 			tower = new SuperTower(pos);
@@ -118,9 +125,7 @@ void Game::sellTower(Tower* tower)
 
 void Game::addBloon()
 {
-    // Bloon* bloon = new Bloon(this->map_layout->get_path(), 25, bloon_layers, bloon_speed);
-    // Bloon* bloon = new Bloon(this->map_layout->get_path(), BloonType::RED, bloon_speed);
-    Bloon* bloon = new Bloon(this->map_layout->get_path(), BloonType::BLACK, bloon_speed);
+    Bloon* bloon = new Bloon(this->map_layout->get_path(), BloonType::RED, bloon_speed);
     this->bloons.push_back(bloon);
 }
 
@@ -185,7 +190,6 @@ void Game::init()
 
 void Game::main_loop()
 {
-    //double deltatime = 1.0/60.0;
     double deltatime, lastFrame, currentFrame = glfwGetTime();
 
     while(!glfwWindowShouldClose(window))
@@ -289,11 +293,7 @@ void Game::drawGUI()
 	int curr_round = std::max(map_layout->get_round(), 0);
 	text = "ROUND " + std::to_string(curr_round);
     ImGui::TextUnformatted(text.c_str());
-    // text = "money: " + std::to_string(money) + "$";
-    // ImGui::TextUnformatted(text.c_str());
-    // text = "health: " + std::to_string(health);
-    // ImGui::TextUnformatted(text.c_str());
-    text = "money: " + std::to_string(money) + "$\thealth: " + std::to_string(health);
+    text = "money: " + std::to_string(money) + "$\nhealth: " + std::to_string(health);
     ImGui::TextUnformatted(text.c_str());
 
 
@@ -313,7 +313,7 @@ void Game::drawGUI()
 
     if(ImGui::Button("Ice:           800$"))
     {
-        this->m_type = TACK_SHOTER;
+        this->m_type = ICE_MONKEY;
         if(state != HOLDING_MONKEY)
             state = HOLDING_MONKEY;
     }
@@ -372,6 +372,17 @@ void Game::drawGUI()
                 {
                     spriteTex = ResourceManager::getTexture("cannon");
                     std::ifstream ifs("data/towers/cannon/stats.json");
+                    Json::Value stats_json;
+                    ifs >> stats_json;
+                    range = stats_json["range"].asInt();
+                    cost = stats_json["cost"].asInt();
+                    size = stats_json["size"].asInt();
+                    break;
+                }
+                case ICE_MONKEY:
+                {
+                    spriteTex = ResourceManager::getTexture("ice_tower");
+                    std::ifstream ifs("data/towers/ice_monkey/stats.json");
                     Json::Value stats_json;
                     ifs >> stats_json;
                     range = stats_json["range"].asInt();
@@ -485,6 +496,9 @@ void Game::drawGUI()
                 case CANNON:
                     tower_type = "Cannon";
                     break;
+                case ICE_MONKEY:
+                    tower_type = "Ice tower";
+                    break;
                 case SUPER_MONKEY:
                     tower_type = "Super tower";
                     break;
@@ -581,7 +595,7 @@ void Game::drawGUI()
         ImGui::PopStyleColor();
 
     // Debug mode toggle
-    ImGui::TextUnformatted("\n\n");
+    ImGui::TextUnformatted("\n");
     if(ImGui::Button("DEBUG"))
         this->switch_debug();
 

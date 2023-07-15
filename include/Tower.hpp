@@ -13,6 +13,7 @@ enum TowerType
     DART_MONKEY,
     TACK_SHOTER,
     CANNON,
+    ICE_MONKEY,
     SUPER_MONKEY
 };
 
@@ -79,6 +80,15 @@ class TackShooter : public Tower
 {
 public:
     TackShooter(glm::vec2);
+    void upgrade(int);
+    void shoot(glm::vec2, std::vector<Projectile*>*);
+    void draw(SpriteRenderer*);
+};
+
+class IceTower : public Tower
+{
+public:
+    IceTower(glm::vec2);
     void upgrade(int);
     void shoot(glm::vec2, std::vector<Projectile*>*);
     void draw(SpriteRenderer*);

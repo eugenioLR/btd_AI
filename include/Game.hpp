@@ -55,6 +55,7 @@ public:
     void reset();
     void increase_money(int);
     void decrease_money(int);
+    void set_health(int);
     void addTower(glm::vec2, TowerType);
     void addTower(glm::vec2, TowerType, bool);
     void sellTower(int);

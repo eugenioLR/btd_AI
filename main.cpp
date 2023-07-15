@@ -11,6 +11,7 @@ int main(int argc, char* argv[])
         if(!strcmp(argv[1], "--debug"))
         {
             game->increase_money(100000);
+            game->set_health(40000);
             game->switch_debug();
         }
     }

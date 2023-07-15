@@ -129,6 +129,7 @@ void Tower::init()
     ResourceManager::loadTexture(("data/towers/dart_monkey/" + skin_name).c_str(), true, "dart_monkey");
     ResourceManager::loadTexture(("data/towers/tack_shooter/" + skin_name).c_str(), true, "tack_shooter");
 	ResourceManager::loadTexture(("data/towers/cannon/" + skin_name).c_str(), true, "cannon");
+    ResourceManager::loadTexture(("data/towers/ice_monkey/" + skin_name).c_str(), true, "ice_tower");
     ResourceManager::loadTexture(("data/towers/super_monkey/" + skin_name).c_str(), true, "super_monkey");
 }
 
@@ -381,7 +382,7 @@ void TackShooter::draw(SpriteRenderer* renderer)
     renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), 1, 0, color, true);
 }
 
-//Tack Tower
+// Cannon Tower
 Cannon::Cannon(glm::vec2 pos) : Tower(pos)
 {
     std::ifstream ifs("data/towers/cannon/stats.json");
@@ -424,6 +425,64 @@ void Cannon::shoot(glm::vec2 bloon_pos, std::vector<Projectile*>* projectiles)
 void Cannon::draw(SpriteRenderer* renderer)
 {
     Texture2D spriteTex = ResourceManager::getTexture("cannon"),
+              circleTex = ResourceManager::getTexture("circle");
+    glm::vec3 color;
+    if(this->selected)
+    {
+        renderer->drawSprite(circleTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), ((float) range)/256, 0, glm::vec3(1.0f, 1.0f, 1.0f), true);
+        color = glm::vec3(0.9f, 0.9f, 0.9f);
+    }
+    else
+    {
+        color = glm::vec3(1.0f, 1.0f, 1.0f);
+    }
+    
+    renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), 1, this->dir*(180/M_PI), color, true);
+}
+
+// Ice Tower
+IceTower::IceTower(glm::vec2 pos) : Tower(pos)
+{
+    std::ifstream ifs("data/towers/ice_monkey/stats.json");
+    Json::Value stats_json;
+    ifs >> stats_json;
+    this->cost = stats_json["cost"].asInt();
+    this->up_1_cost = stats_json["up_1_cost"].asInt();
+    this->up_2_cost = stats_json["up_2_cost"].asInt();
+    this->sell_value = stats_json["sell_value"].asInt();
+    this->cooldown = stats_json["cooldown"].asFloat();
+    this->range = stats_json["range"].asInt();
+    this->penetration = stats_json["penetration"].asInt();
+    this->size = stats_json["size"].asInt();
+    this->type = ICE_MONKEY;
+}
+
+void IceTower::upgrade(int index)
+{
+    switch (index) {
+        case 1:
+        {
+            upgrade1++;
+            this->cooldown *= 0.8;
+            break;
+        }
+        case 2:
+        {
+            upgrade2++;
+            this->range += this->range/4;
+            break;
+        }
+    }
+}
+
+void IceTower::shoot(glm::vec2 bloon_pos, std::vector<Projectile*>* projectiles)
+{
+    projectiles->push_back(new FreezeArea(this->pos, dir, 500, this->penetration));
+}
+
+void IceTower::draw(SpriteRenderer* renderer)
+{
+    Texture2D spriteTex = ResourceManager::getTexture("ice_tower"),
               circleTex = ResourceManager::getTexture("circle");
     glm::vec3 color;
     if(this->selected)

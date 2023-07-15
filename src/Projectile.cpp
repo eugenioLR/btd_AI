@@ -47,6 +47,7 @@ void Projectile::init()
     ResourceManager::loadTexture(("data/projectiles/" + dart_name).c_str(), true, "dart");
     ResourceManager::loadTexture("data/projectiles/bomb.png", true, "bomb");
     ResourceManager::loadTexture("data/projectiles/explosion.png", true, "explosion");
+    ResourceManager::loadTexture("data/projectiles/freeze_area.png", true, "freeze_area");
 }
 
 // Bomb
@@ -88,7 +89,7 @@ void Bomb::draw(SpriteRenderer* renderer)
 }
 
 // Explosion
-Explosion::Explosion(glm::vec2 pos, float dir, float speed, int penetration) : Projectile(pos, EXPLOSION, dir, speed, penetration, 0.07)
+Explosion::Explosion(glm::vec2 pos, float dir, float speed, int penetration) : Projectile(pos, EXPLOSION, dir, speed, penetration, 0.15)
 {
 
 }
@@ -127,6 +128,46 @@ void Explosion::draw(SpriteRenderer* renderer)
     glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);
 
     renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), 1, this->dir*180/M_PI, color, true);
+}
+
+// FreezeArea
+FreezeArea::FreezeArea(glm::vec2 pos, float dir, float speed, int penetration) : Projectile(pos, FREEZE, dir, speed, penetration, 0.25)
+{
+    this->area = 65;
+}
+
+void FreezeArea::update(float deltatime, std::vector<Bloon*>* bloons, std::vector<Projectile*>* proj, int* money)
+{
+    bool bloon_hit = false;
+    Bloon* b;
+
+    // decrement timer
+    this->lifetime -= deltatime;
+
+    // do damage on the last frame
+    if(this->lifetime < 0)
+    {
+        this->isExisting = false;
+    }
+
+    //hit all bloons in range
+    for(int i = 0; i < bloons->size(); i++)
+    {
+        b = bloons->at(i);
+
+        if(glm::length(this->pos - b->get_pos()) < this->area)
+        {
+            b->pop(FREEZE);
+        }
+    }
+}
+
+void FreezeArea::draw(SpriteRenderer* renderer)
+{
+    Texture2D spriteTex = ResourceManager::getTexture("freeze_area");
+    glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);
+
+    renderer->drawSprite(spriteTex, this->pos + glm::vec2(OFFSET_X, OFFSET_Y), 1, 0, color, true);
 }
 
 // Dart
